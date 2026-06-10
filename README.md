@@ -53,7 +53,7 @@ You will need **Node.js 18+** and a free **Supabase** account.
 ### 1. Clone and install
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/MullahStanley/magari-car-rental.git
 cd magari-car-rental
 npm install
 ```
@@ -160,9 +160,9 @@ Users pick a date range using a calendar component. Past dates and invalid range
 
 ## Author
 
-**[Your Name]**  
-[Your Course / Institution]  
-[Your Email]
+**Mullah Kimani**  
+Bsc Software development, KCAU 
+kimanimullah@gmail.com
 
 ---
 
