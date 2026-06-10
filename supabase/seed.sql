@@ -1,0 +1,2 @@
+-- Run after migration to populate additional test data if needed.
+-- Seed vehicles are included in 001_initial_schema.sql
