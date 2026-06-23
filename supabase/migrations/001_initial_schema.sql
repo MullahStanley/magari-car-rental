@@ -160,8 +160,8 @@ begin
         where vehicle_id = new.vehicle_id
           and status in ('pending', 'confirmed')
           and id <> coalesce(new.id, '00000000-0000-0000-0000-000000000000'::uuid)
-          and start_date <= new.end_date
-          and end_date >= new.start_date
+          and start_date < new.end_date
+          and end_date > new.start_date
     ) then
         raise exception 'Vehicle is already booked for the selected dates';
     end if;

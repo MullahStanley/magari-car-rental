@@ -22,15 +22,16 @@ const VehicleShowroom = dynamic(
     ),
   }
 );
-
+//updating the interface
 interface VehicleDetailPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
 export async function generateMetadata({ params }: VehicleDetailPageProps) {
-  const { id } = await params;
-  const vehicle = await getVehicleById(id);
-  if (!vehicle) return { title: "Vehicle Not Found" };
+  const { id } = params;
+  const vehicle = getVehicleById(id);
+  if (!vehicle) 
+    return { title: "Vehicle Not Found" };
   return {
     title: `${vehicle.brand} ${vehicle.name} — Magari`,
     description: vehicle.description ?? `Rent the ${vehicle.name}`,
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: VehicleDetailPageProps) {
 export default async function VehicleDetailPage({
   params,
 }: VehicleDetailPageProps) {
-  const { id } = await params;
+  const { id } = params;
   const [vehicle, supabase] = await Promise.all([
     getVehicleById(id),
     createClient(),

@@ -4,30 +4,33 @@ import { VehicleCard } from "@/components/cars/vehicle-card";
 import { VehicleFilters } from "@/components/cars/vehicle-filters";
 import { getVehicleCategories, getVehicles } from "@/lib/vehicles";
 
+//updating the interface
 interface CarsPageProps {
-  searchParams: Promise<{
+  searchParams: {
     category?: string;
     minPrice?: string;
     maxPrice?: string;
     startDate?: string;
     endDate?: string;
-  }>;
+  };
 }
+//
+
 
 export const metadata = {
   title: "Fleet — Magari Car Rental",
   description: "Browse our premium vehicle fleet with advanced filtering.",
 };
 
-export default async function CarsPage({ searchParams }: CarsPageProps) {
-  const params = await searchParams;
+export default async function CarsPage({ searchParams }: CarsPageProps) 
+{
 
   const filters = {
-    category: params.category,
-    minPrice: params.minPrice ? Number(params.minPrice) : undefined,
-    maxPrice: params.maxPrice ? Number(params.maxPrice) : undefined,
-    startDate: params.startDate,
-    endDate: params.endDate,
+    category: searchParams.category,
+    minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
+    maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
+    startDate: searchParams.startDate,
+    endDate: searchParams.endDate,
   };
 
   const [vehicles, categories] = await Promise.all([

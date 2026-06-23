@@ -32,8 +32,13 @@ export async function createBooking(
     return { success: false, error: "You must be logged in to book a vehicle." };
   }
 
-  const startDate = new Date(input.startDate);
-  const endDate = new Date(input.endDate);
+// Validate dates
+const [startYear, startMonth, startDay] = input.startDate.split("-").map(Number);
+const startDate = new Date(startYear, startMonth - 1, startDay);
+
+const [endYear, endMonth, endDay] = input.endDate.split("-").map(Number);
+const endDate = new Date(endYear, endMonth - 1, endDay);
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

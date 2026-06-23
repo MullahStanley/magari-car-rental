@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   Center,
@@ -57,30 +57,32 @@ interface VehicleModelProps {
 function VehicleModel({ url, color }: VehicleModelProps) {
   const { scene } = useGLTF(url);
 
-  const coloredScene = useMemo(() => {
-    const clone = scene.clone(true);
-    clone.traverse((child) => {
+  // Clone the scene only ONCE
+  const clonedScene = useMemo(() => scene.clone(true), [scene]);
+
+  // Apply color changes dynamically without re-cloning
+  useEffect(() => {
+    clonedScene.traverse((child) => {
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh;
         const mat = mesh.material as MeshStandardMaterial;
         const name = (mesh.name + (mat?.name ?? "")).toLowerCase();
+        
         const isBody = BODY_MATERIAL_KEYWORDS.some((kw) => name.includes(kw));
 
         if (isBody && mat) {
-          const newMat = mat.clone();
-          newMat.color.set(color);
-          newMat.metalness = 0.6;
-          newMat.roughness = 0.3;
-          mesh.material = newMat;
+          // Directly mutate the color vector of the existing material
+          mat.color.set(color);
+          mat.metalness = 0.6;
+          mat.roughness = 0.3;
         }
       }
     });
-    return clone;
-  }, [scene, color]);
+  }, [clonedScene, color]);
 
   return (
     <Center>
-      <primitive object={coloredScene as Group} />
+      <primitive object={clonedScene as Group} />
     </Center>
   );
 }
