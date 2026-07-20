@@ -95,7 +95,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold">Ready to hit the road?</h2>
           <p className="mt-2 text-muted-foreground">
-            Choose from SUVs, sedans, and sports cars starting at $129/day
+            Choose from SUVs, sedans, and sports cars from as low as Ksh.2000/day
           </p>
           <Button size="lg" className="mt-8" asChild>
             <Link href="/cars">
