@@ -220,9 +220,9 @@ create policy "Admins can delete vehicle assets"
 -- 6. Seed data (sample vehicles)
 -- ────────────────────────────────────────────────────────────
 insert into public.vehicles (name, brand, category, daily_rate, model_3d_url, description) values
-    ('Model S Plaid', 'Tesla', 'Sports', 299.00, 'models/tesla-model-s.glb', 'Electric performance sedan with ludicrous acceleration.'),
-    ('X5 M50i', 'BMW', 'SUV', 189.00, 'models/bmw-x5.glb', 'Luxury SUV with commanding presence and all-wheel drive.'),
-    ('C-Class', 'Mercedes-Benz', 'Sedan', 149.00, 'models/mercedes-c-class.glb', 'Elegant executive sedan with premium comfort.'),
+    ('Model X', 'Tesla', 'Sports', 299.00, 'models/tesla-model-x.glb', 'Electric performance sedan with ludicrous acceleration.'),
+    ('M3 Touring', 'BMW', 'SUV', 189.00, 'models/bmw-x5.glb', 'Luxury SUV with commanding presence and all-wheel drive.'),
+    ('A-45 AMG', 'Mercedes-Benz', 'Hatchback', 149.00, 'models/mercedes-a45-amg.glb', 'Elegant executive sedan with premium comfort.'),
     ('911 Carrera', 'Porsche', 'Sports', 399.00, 'models/porsche-911.glb', 'Iconic sports car with precision engineering.'),
     ('Range Rover Sport', 'Land Rover', 'SUV', 249.00, 'models/range-rover-sport.glb', 'Versatile luxury SUV for any terrain.'),
-    ('A4 Avant', 'Audi', 'Sedan', 129.00, 'models/audi-a4.glb', 'Refined wagon with quattro all-wheel drive.');
+    ('Honda Passport Trailsport 2026', 'Honda', 'SUV', 129.00, 'models/honda-passport.glb', 'Refined suv with all-wheel drive.');
