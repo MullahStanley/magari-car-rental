@@ -8,7 +8,7 @@ create extension if not exists "pgcrypto";
 -- ────────────────────────────────────────────────────────────
 -- 1. Profiles (linked to Supabase Auth)
 -- ────────────────────────────────────────────────────────────
-create table public.profiles (
+create table if not exists public.profiles (
     id uuid references auth.users on delete cascade primary key,
     full_name text,
     avatar_url text,
@@ -18,17 +18,25 @@ create table public.profiles (
 
 alter table public.profiles enable row level security;
 
+--dropping existing policies to avoid conflicts
+drop policy if exists "Users can view own profile" on public.profiles;
+drop policy if exists "Users can update own profile" on public.profiles;
+drop policy if exists "Users can insert own profile" on public.profiles;
+
 create policy "Users can view own profile"
     on public.profiles for select
-    using (auth.uid() = id);
+    to authenticated
+    using ( (select auth.uid()) = id );
 
 create policy "Users can update own profile"
     on public.profiles for update
-    using (auth.uid() = id);
+    to authenticated
+    using ( (select auth.uid()) = id );
 
 create policy "Users can insert own profile"
     on public.profiles for insert
-    with check (auth.uid() = id);
+    to authenticated
+    with check ( (select auth.uid()) = id );
 
 -- Auto-create profile on signup
 create or replace function public.handle_new_user()
@@ -47,6 +55,10 @@ begin
 end;
 $$;
 
+--drop existing trigger to avoid conflicts
+drop trigger if exists on_auth_user_created on auth.users;
+drop trigger if exists on_auth_user_created on auth.users cascade;
+
 create trigger on_auth_user_created
     after insert on auth.users
     for each row execute function public.handle_new_user();
@@ -54,7 +66,7 @@ create trigger on_auth_user_created
 -- ────────────────────────────────────────────────────────────
 -- 2. Vehicles
 -- ────────────────────────────────────────────────────────────
-create table public.vehicles (
+create table if not exists public.vehicles (
     id uuid default gen_random_uuid() primary key,
     name text not null,
     brand text not null,
@@ -69,12 +81,21 @@ create table public.vehicles (
 
 alter table public.vehicles enable row level security;
 
+--dropping existing policies to avoid conflicts
+drop policy if exists "Anyone can read available vehicles" on public.vehicles;
+drop policy if exists "Admins can read all vehicles" on public.vehicles;
+drop policy if exists "Admins can insert vehicles" on public.vehicles;
+drop policy if exists "Admins can update vehicles" on public.vehicles;
+drop policy if exists "Admins can delete vehicles" on public.vehicles;
+
 create policy "Anyone can read available vehicles"
     on public.vehicles for select
+    to anon, authenticated
     using (is_available = true);
 
 create policy "Admins can read all vehicles"
     on public.vehicles for select
+    to service_role, authenticated
     using (
         exists (
             select 1 from public.profiles
@@ -84,6 +105,7 @@ create policy "Admins can read all vehicles"
 
 create policy "Admins can insert vehicles"
     on public.vehicles for insert
+    to service_role, authenticated
     with check (
         exists (
             select 1 from public.profiles
@@ -93,6 +115,7 @@ create policy "Admins can insert vehicles"
 
 create policy "Admins can update vehicles"
     on public.vehicles for update
+    to service_role, authenticated
     using (
         exists (
             select 1 from public.profiles
@@ -102,6 +125,7 @@ create policy "Admins can update vehicles"
 
 create policy "Admins can delete vehicles"
     on public.vehicles for delete
+    to service_role, authenticated
     using (
         exists (
             select 1 from public.profiles
@@ -112,7 +136,7 @@ create policy "Admins can delete vehicles"
 -- ────────────────────────────────────────────────────────────
 -- 3. Bookings
 -- ────────────────────────────────────────────────────────────
-create table public.bookings (
+create table if not exists public.bookings (
     id uuid default gen_random_uuid() primary key,
     user_id uuid references public.profiles(id) on delete cascade not null,
     vehicle_id uuid references public.vehicles(id) on delete cascade not null,
@@ -126,20 +150,30 @@ create table public.bookings (
 
 alter table public.bookings enable row level security;
 
+--dropping existing policies to avoid conflicts
+drop policy if exists "Users can view own bookings" on public.bookings;
+drop policy if exists "Users can create own bookings" on public.bookings;
+drop policy if exists "Users can update own bookings" on public.bookings;
+drop policy if exists "Admins can view all bookings" on public.bookings;
+
 create policy "Users can view own bookings"
     on public.bookings for select
+    to authenticated
     using (auth.uid() = user_id);
 
 create policy "Users can create own bookings"
     on public.bookings for insert
+    to authenticated
     with check (auth.uid() = user_id);
 
 create policy "Users can update own bookings"
     on public.bookings for update
+    to authenticated
     using (auth.uid() = user_id);
 
 create policy "Admins can view all bookings"
     on public.bookings for select
+    to service_role, authenticated
     using (
         exists (
             select 1 from public.profiles
@@ -169,6 +203,10 @@ begin
 end;
 $$;
 
+--drop existing trigger to avoid conflicts
+drop trigger if exists prevent_booking_overlap on public.bookings;
+drop trigger if exists prevent_booking_overlap on public.bookings cascade;
+
 create trigger prevent_booking_overlap
     before insert or update on public.bookings
     for each row execute function public.check_booking_overlap();
@@ -180,14 +218,22 @@ insert into storage.buckets (id, name, public)
 values ('vehicle-assets', 'vehicle-assets', true)
 on conflict (id) do nothing;
 
+--dropping existing policies to avoid conflicts
+drop policy if exists "Public read access for vehicle assets" on storage.objects;
+drop policy if exists "Admins can upload vehicle assets" on storage.objects;
+drop policy if exists "Admins can update vehicle assets" on storage.objects;
+drop policy if exists "Admins can delete vehicle assets" on storage.objects;
+
 -- Public read access for 3D models
 create policy "Public read access for vehicle assets"
     on storage.objects for select
+    to public
     using (bucket_id = 'vehicle-assets');
 
 -- Admin-only write/delete
 create policy "Admins can upload vehicle assets"
     on storage.objects for insert
+    to service_role, authenticated
     with check (
         bucket_id = 'vehicle-assets'
         and exists (
@@ -198,6 +244,7 @@ create policy "Admins can upload vehicle assets"
 
 create policy "Admins can update vehicle assets"
     on storage.objects for update
+    to service_role, authenticated
     using (
         bucket_id = 'vehicle-assets'
         and exists (
@@ -208,6 +255,7 @@ create policy "Admins can update vehicle assets"
 
 create policy "Admins can delete vehicle assets"
     on storage.objects for delete
+    to service_role, authenticated
     using (
         bucket_id = 'vehicle-assets'
         and exists (
@@ -220,9 +268,13 @@ create policy "Admins can delete vehicle assets"
 -- 6. Seed data (sample vehicles)
 -- ────────────────────────────────────────────────────────────
 insert into public.vehicles (name, brand, category, daily_rate, model_3d_url, description) values
-    ('Model S Plaid', 'Tesla', 'Sports', 299.00, 'models/tesla-model-s.glb', 'Electric performance sedan with ludicrous acceleration.'),
-    ('X5 M50i', 'BMW', 'SUV', 189.00, 'models/bmw-x5.glb', 'Luxury SUV with commanding presence and all-wheel drive.'),
-    ('C-Class', 'Mercedes-Benz', 'Sedan', 149.00, 'models/mercedes-c-class.glb', 'Elegant executive sedan with premium comfort.'),
-    ('911 Carrera', 'Porsche', 'Sports', 399.00, 'models/porsche-911.glb', 'Iconic sports car with precision engineering.'),
-    ('Range Rover Sport', 'Land Rover', 'SUV', 249.00, 'models/range-rover-sport.glb', 'Versatile luxury SUV for any terrain.'),
-    ('A4 Avant', 'Audi', 'Sedan', 129.00, 'models/audi-a4.glb', 'Refined wagon with quattro all-wheel drive.');
+    ('Model X 2020', 'Tesla', 'Sports', 4000.00, 'models/tesla-model_x_2020.glb', 'Electric performance sedan with ludicrous acceleration.'),
+    ('M3 Touring 2023', 'BMW', 'Station Wagon', 10000.00, 'models/2023_bmw_m3_touring.glb', 'Luxury station wagon with commanding presence and all-wheel drive.'),
+    ('A-45 AMG 2018', 'Mercedes-Benz', 'Hatchback', 4000.00, 'models/mercedes-benz_a45_amg_2018.glb', 'Elegant hatchback with premium comfort and a heavy road presence.'),
+    ('Maybach 2022', 'Mercedes-Maybach', 'Sedan', 40000.00, 'models/mercedes-benz_maybach_2022.glb', 'Luxury sedan with unparalleled comfort and performance.'),
+    ('Swift 2024', 'Suzuki', 'Sports', 2000.00, 'models/2024_suzuki_swift_hybrid_plus.glb', 'Iconic sports car with precision engineering.'),
+    ('S-Cross 4x2 GLX 2024', 'Suzuki', 'CUV', 3500.00, 'models/2024_suzuki_s-cross_4x2_glx_hybrid.glb', 'Gives the premium feel of a luxury SUV with the efficiency of a compact car'),
+    ('Range Rover Supercharged 2006', 'Land Rover', 'SUV', 12000.00, 'models/2006_land_rover_range_rover_supercharged.glb', 'Versatile luxury SUV for any terrain.'),
+    ('Toyota Hilux 2022', 'Toyota', 'SUV', 10000.00, 'models/2022_toyota_hilux.glb', 'Rugged and reliable SUV for off-road adventures.'),
+    ('Integra DB8 Type-R 2007', 'Honda', 'Sports', 4500.00, 'models/honda_integra_db8_type-r.glb', 'Highly sought-after JDM classic offering a thrilling driving experience.'),
+    ('Fortuner 2021', 'Toyota', 'SUV', 10000.00, 'models/toyota_fortuner_2021.glb', 'Rugged and reliable SUV for off-road adventures.');
