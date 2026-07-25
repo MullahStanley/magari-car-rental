@@ -57,28 +57,57 @@ interface VehicleModelProps {
 function VehicleModel({ url, color }: VehicleModelProps) {
   const { scene } = useGLTF(url);
 
-  // Clone the scene only ONCE
-  const clonedScene = useMemo(() => scene.clone(true), [scene]);
+  // Clone the scene and ensure deep isolation for materials
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone(true);
+    clone.traverse((child) => {
+      if ((child as Mesh).isMesh) {
+        const mesh = child as Mesh;
+        if (mesh.material) {
+          // Clone material so color mutations do not leak to shared meshes
+          mesh.material = (mesh.material as MeshStandardMaterial).clone();
+        }
+      }
+    });
+    return clone;
+  }, [scene]);
 
-  // Apply color changes dynamically without re-cloning
+  // Apply color changes dynamically
   useEffect(() => {
     clonedScene.traverse((child) => {
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh;
         const mat = mesh.material as MeshStandardMaterial;
         const name = (mesh.name + (mat?.name ?? "")).toLowerCase();
-        
+
         const isBody = BODY_MATERIAL_KEYWORDS.some((kw) => name.includes(kw));
 
         if (isBody && mat) {
-          // Directly mutate the color vector of the existing material
           mat.color.set(color);
           mat.metalness = 0.6;
           mat.roughness = 0.3;
+          mat.needsUpdate = true;
         }
       }
     });
   }, [clonedScene, color]);
+
+  // Cleanup Three.js materials from GPU memory on unmount
+  useEffect(() => {
+    return () => {
+      clonedScene.traverse((child) => {
+        if ((child as Mesh).isMesh) {
+          const mesh = child as Mesh;
+          mesh.geometry?.dispose();
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach((m) => m.dispose());
+          } else {
+            mesh.material?.dispose();
+          }
+        }
+      });
+    };
+  }, [clonedScene]);
 
   return (
     <Center>
@@ -131,6 +160,11 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
     setColor(newColor);
   }, []);
 
+  // Pre-fetch GLTF file as soon as the component initializes
+  useEffect(() => {
+    useGLTF.preload(modelUrl);
+  }, [modelUrl]);
+
   return (
     <div
       className={cn(
@@ -148,16 +182,17 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
         </Canvas>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-2xl border bg-card p-5 lg:w-56">
+      <div className="flex flex-col justify-between gap-4 rounded-2xl border bg-card p-5 lg:w-64">
         <div>
           <Label className="text-xs uppercase tracking-wider text-muted-foreground">
             Paint Color
           </Label>
-          <p className="mt-1 text-sm font-medium">
+          <p className="mt-1 text-base font-semibold">
             {PAINT_COLORS.find((c) => c.value === color)?.name}
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        
+        <div className="grid grid-cols-3 gap-3">
           {PAINT_COLORS.map((paint) => (
             <button
               key={paint.value}
@@ -166,15 +201,16 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
               aria-label={`Select ${paint.name}`}
               onClick={() => handleColorChange(paint.value)}
               className={cn(
-                "aspect-square rounded-full border-2 transition-all hover:scale-110",
+                "aspect-square w-full rounded-full border-2 transition-all duration-200 hover:scale-105 active:scale-95",
                 color === paint.value
-                  ? "border-primary ring-2 ring-primary ring-offset-2"
-                  : "border-transparent"
+                  ? "border-primary shadow-sm ring-2 ring-primary ring-offset-2 ring-offset-background"
+                  : "border-transparent opacity-80 hover:opacity-100"
               )}
               style={{ backgroundColor: paint.value }}
             />
           ))}
         </div>
+
         <p className="text-xs text-muted-foreground">
           Drag to rotate · Colors apply to body panels
         </p>
