@@ -1,35 +1,20 @@
 import { notFound } from "next/navigation";
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import { VehicleShowroomClient } from "@/components/showroom/vehicle-showroom-client";
 import { BookingForm } from "@/components/cars/booking-form";
 import { Badge } from "@/components/ui/badge";
 import { getVehicleById } from "@/lib/vehicles";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency, getStorageUrl } from "@/lib/utils";
+import { formatCurrency, getModelUrl } from "@/lib/utils";
 
-const VehicleShowroom = dynamic(
-  () =>
-    import("@/components/showroom/vehicle-showroom").then(
-      (mod) => mod.VehicleShowroom
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex h-[400px] items-center justify-center rounded-2xl bg-muted">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    ),
-  }
-);
-//updating the interface
 interface VehicleDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: VehicleDetailPageProps) {
-  const { id } = params;
-  const vehicle = getVehicleById(id);
+  const { id } = (await params);
+  const vehicle = await getVehicleById(id);
   if (!vehicle) 
     return { title: "Vehicle Not Found" };
   return {
@@ -41,7 +26,7 @@ export async function generateMetadata({ params }: VehicleDetailPageProps) {
 export default async function VehicleDetailPage({
   params,
 }: VehicleDetailPageProps) {
-  const { id } = params;
+  const { id } = await params;
   const [vehicle, supabase] = await Promise.all([
     getVehicleById(id),
     createClient(),
@@ -53,7 +38,8 @@ export default async function VehicleDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const modelUrl = getStorageUrl(vehicle.model_3d_url);
+  const isVerified = user?.user_metadata?.verified === true;
+  const modelUrl = getModelUrl(vehicle.model_3d_url);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -81,7 +67,7 @@ export default async function VehicleDetailPage({
             </div>
           }
         >
-          <VehicleShowroom modelUrl={modelUrl} />
+          <VehicleShowroomClient modelUrl={modelUrl} />
         </Suspense>
       </div>
 
@@ -91,6 +77,7 @@ export default async function VehicleDetailPage({
           dailyRate={vehicle.daily_rate}
           vehicleName={vehicle.name}
           isAuthenticated={!!user}
+          isVerified={isVerified}
         />
       </div>
     </div>

@@ -27,6 +27,7 @@ interface BookingFormProps {
   dailyRate: number;
   vehicleName: string;
   isAuthenticated: boolean;
+  isVerified?: boolean;
 }
 
 export function BookingForm({
@@ -34,6 +35,7 @@ export function BookingForm({
   dailyRate,
   vehicleName,
   isAuthenticated,
+  isVerified = false,
 }: BookingFormProps) {
   const router = useRouter();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -60,6 +62,11 @@ export function BookingForm({
       router.push(
         `/auth/login?redirect=/cars/${vehicleId}`
       );
+      return;
+    }
+
+    if (!isVerified) {
+      router.push(`/profile?verify=1`);
       return;
     }
 
@@ -131,10 +138,12 @@ export function BookingForm({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing…
             </>
-          ) : isAuthenticated ? (
-            "Confirm Booking"
-          ) : (
+          ) : !isAuthenticated ? (
             "Sign in to Book"
+          ) : !isVerified ? (
+            "Verify Identity to Book"
+          ) : (
+            "Confirm Booking"
           )}
         </Button>
       </CardFooter>

@@ -26,6 +26,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -39,15 +40,25 @@ export function LoginForm({ redirect }: LoginFormProps) {
 
     try {
       if (isSignUp) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { full_name: email.split("@")[0] },
+            data: { full_name: fullName || email.split("@")[0] },
           },
         });
         if (signUpError) throw signUpError;
-        setError("Check your email to confirm your account.");
+
+        // If a session is returned the account was created (auto-confirm
+        // on) — sign straight in. Otherwise a confirmation email was sent.
+        if (data.session) {
+          router.push(redirect);
+          router.refresh();
+        } else {
+          setError(
+            "Account created! Check your inbox (and spam) to confirm your email, then sign in."
+          );
+        }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -58,7 +69,15 @@ export function LoginForm({ redirect }: LoginFormProps) {
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      const message =
+        err instanceof Error ? err.message : "Authentication failed";
+      if (message.toLowerCase().includes("email not confirmed")) {
+        setError(
+          "Email not confirmed yet — check your inbox (and spam) for the confirmation link."
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -102,9 +121,22 @@ export function LoginForm({ redirect }: LoginFormProps) {
               minLength={6}
             />
           </div>
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+          )}
           {error && (
             <p
-              className={`text-sm ${error.includes("Check your email") ? "text-primary" : "text-destructive"}`}
+              className={`text-sm ${error.includes("Account created") ? "text-primary" : "text-destructive"}`}
               role="alert"
             >
               {error}

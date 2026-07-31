@@ -4,15 +4,14 @@ import { VehicleCard } from "@/components/cars/vehicle-card";
 import { VehicleFilters } from "@/components/cars/vehicle-filters";
 import { getVehicleCategories, getVehicles } from "@/lib/vehicles";
 
-//updating the interface
 interface CarsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
     minPrice?: string;
     maxPrice?: string;
     startDate?: string;
     endDate?: string;
-  };
+  }>;
 }
 //
 
@@ -24,21 +23,20 @@ export const metadata = {
 
 export default async function CarsPage({ searchParams }: CarsPageProps) 
 {
+  const sp = await searchParams;
 
   const filters = {
-    category: searchParams.category,
-    minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-    maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-    startDate: searchParams.startDate,
-    endDate: searchParams.endDate,
+    category: sp.category,
+    minPrice: sp.minPrice ? Number(sp.minPrice) : undefined,
+    maxPrice: sp.maxPrice ? Number(sp.maxPrice) : undefined,
+    startDate: sp.startDate,
+    endDate: sp.endDate,
   };
 
   const [vehicles, categories] = await Promise.all([
     getVehicles(filters),
     getVehicleCategories(),
   ]);
-
-  const maxPrice = Math.max(...vehicles.map((v) => v.daily_rate), 500);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -52,7 +50,7 @@ export default async function CarsPage({ searchParams }: CarsPageProps)
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-muted" />}>
-            <VehicleFilters categories={categories} maxPrice={maxPrice} />
+            <VehicleFilters categories={categories} />
           </Suspense>
         </aside>
 
