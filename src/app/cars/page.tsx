@@ -4,15 +4,14 @@ import { VehicleCard } from "@/components/cars/vehicle-card";
 import { VehicleFilters } from "@/components/cars/vehicle-filters";
 import { getVehicleCategories, getVehicles } from "@/lib/vehicles";
 
-//updating the interface
 interface CarsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
     minPrice?: string;
     maxPrice?: string;
     startDate?: string;
     endDate?: string;
-  };
+  }>;
 }
 //
 
@@ -24,13 +23,14 @@ export const metadata = {
 
 export default async function CarsPage({ searchParams }: CarsPageProps) 
 {
+  const sp = await searchParams;
 
   const filters = {
-    category: searchParams.category,
-    minPrice: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-    maxPrice: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
-    startDate: searchParams.startDate,
-    endDate: searchParams.endDate,
+    category: sp.category,
+    minPrice: sp.minPrice ? Number(sp.minPrice) : undefined,
+    maxPrice: sp.maxPrice ? Number(sp.maxPrice) : undefined,
+    startDate: sp.startDate,
+    endDate: sp.endDate,
   };
 
   const [vehicles, categories] = await Promise.all([

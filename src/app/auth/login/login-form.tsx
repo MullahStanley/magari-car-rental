@@ -26,6 +26,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -43,7 +44,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
           email,
           password,
           options: {
-            data: { full_name: email.split("@")[0] },
+            data: { full_name: fullName || email.split("@")[0] },
           },
         });
         if (signUpError) throw signUpError;
@@ -102,6 +103,19 @@ export function LoginForm({ redirect }: LoginFormProps) {
               minLength={6}
             />
           </div>
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+          )}
           {error && (
             <p
               className={`text-sm ${error.includes("Check your email") ? "text-primary" : "text-destructive"}`}

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { ArrowRight, Car } from "lucide-react";
 import type { Vehicle } from "@/types/database";
 import { Badge } from "@/components/ui/badge";

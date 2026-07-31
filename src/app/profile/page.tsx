@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
+import { VerifyButton } from "@/components/verification/verify-button";
 
 export const metadata = {
   title: "Profile — Magari",
@@ -27,6 +28,8 @@ export default async function ProfilePage() {
     .select("*")
     .eq("id", user.id)
     .single();
+
+  const isVerified = user.user_metadata?.verified === true;
 
   return (
     <div className="container mx-auto max-w-lg px-4 py-8">
@@ -61,6 +64,10 @@ export default async function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-8">
+        <VerifyButton isVerified={isVerified} />
+      </div>
     </div>
   );
 }
