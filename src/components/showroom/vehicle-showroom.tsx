@@ -1,6 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useMemo, useState, useEffect } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ComponentRef, RefObject } from "react";
 import { Canvas } from "@react-three/fiber";
 import {
   Center,
@@ -9,17 +10,57 @@ import {
   OrbitControls,
   useGLTF,
 } from "@react-three/drei";
-import { Loader2 } from "lucide-react";
+import { Loader2, Maximize } from "lucide-react";
 import { Box3, Vector3 } from "three";
 import type { Group, Mesh, MeshStandardMaterial } from "three";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 
 // Target max dimension for every model after normalization. The GLB files
 // are authored at wildly different unit scales (some ~0.04 units, some
 // ~23 units), which makes some cars invisible dots and others too big for
 // the camera. Normalizing to this size makes them all fit the viewport.
 const NORMALIZED_MODEL_SIZE = 5;
+
+// Camera-distance zoom bounds for the zoom slider (0–100%). The default 50%
+// keeps the camera at ~6 units — the framing the normalized models fit best.
+const ZOOM_MIN_DISTANCE = 2.5;
+const ZOOM_MAX_DISTANCE = 9.5;
+const DEFAULT_ZOOM = 50;
+
+// Per-vehicle showroom preferences persisted in localStorage. The map is
+// keyed by the model URL so each car remembers its own paint color and zoom.
+const SHOWROOM_PREFS_KEY = "showroom-prefs";
+
+interface ShowroomPrefs {
+  color: string;
+  zoom: number;
+}
+
+function readShowroomPrefs(): Record<string, ShowroomPrefs> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(SHOWROOM_PREFS_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, ShowroomPrefs>) : {};
+  } catch {
+    // Corrupted JSON or storage unavailable — fall back to defaults.
+    return {};
+  }
+}
+
+function writeShowroomPrefs(modelUrl: string, prefs: ShowroomPrefs) {
+  if (typeof window === "undefined") return;
+  try {
+    const all = readShowroomPrefs();
+    all[modelUrl] = prefs;
+    window.localStorage.setItem(SHOWROOM_PREFS_KEY, JSON.stringify(all));
+  } catch {
+    // Quota exceeded or private mode — persistence is best-effort.
+  }
+}
+
+type OrbitControlsHandle = ComponentRef<typeof OrbitControls>;
 
 const PAINT_COLORS = [
   { name: "Midnight Black", value: "#1a1a2e" },
@@ -234,9 +275,29 @@ function VehicleModel({ url, color }: VehicleModelProps) {
 interface SceneProps {
   modelUrl: string;
   color: string;
+  zoom: number;
+  controlsRef: RefObject<OrbitControlsHandle | null>;
 }
 
-function Scene({ modelUrl, color }: SceneProps) {
+function Scene({ modelUrl, color, zoom, controlsRef }: SceneProps) {
+  // Move the camera along its current viewing direction to match the zoom
+  // slider. Auto-rotate keeps spinning around the same orbit radius.
+  useEffect(() => {
+    const controls = controlsRef.current;
+    if (!controls) return;
+    const dist =
+      ZOOM_MAX_DISTANCE -
+      (zoom / 100) * (ZOOM_MAX_DISTANCE - ZOOM_MIN_DISTANCE);
+    const direction = controls.object.position
+      .clone()
+      .sub(controls.target)
+      .normalize();
+    controls.object.position
+      .copy(controls.target)
+      .add(direction.multiplyScalar(dist));
+    controls.update();
+  }, [zoom, controlsRef]);
+
   return (
     <>
       <ambientLight intensity={0.4} />
@@ -253,6 +314,7 @@ function Scene({ modelUrl, color }: SceneProps) {
         <Environment preset="city" />
       </Suspense>
       <OrbitControls
+        ref={controlsRef}
         enableZoom={false}
         minPolarAngle={Math.PI / 6}
         maxPolarAngle={Math.PI / 2.2}
@@ -269,11 +331,40 @@ interface VehicleShowroomProps {
 }
 
 export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
-  const [color, setColor] = useState(PAINT_COLORS[0].value);
+  // Restore this vehicle's saved preferences once on mount. The saved color
+  // is validated against the palette so stale/corrupt values fall back.
+  const [color, setColor] = useState(() => {
+    const saved = readShowroomPrefs()[modelUrl]?.color;
+    return saved && PAINT_COLORS.some((c) => c.value === saved)
+      ? saved
+      : PAINT_COLORS[0].value;
+  });
+  const [zoom, setZoom] = useState(() => {
+    const saved = readShowroomPrefs()[modelUrl]?.zoom;
+    return typeof saved === "number" && saved >= 0 && saved <= 100
+      ? saved
+      : DEFAULT_ZOOM;
+  });
+  const controlsRef = useRef<OrbitControlsHandle | null>(null);
 
   const handleColorChange = useCallback((newColor: string) => {
     setColor(newColor);
   }, []);
+
+  const handleFitToView = useCallback(() => {
+    setZoom(DEFAULT_ZOOM);
+    const controls = controlsRef.current;
+    if (controls) {
+      controls.object.position.set(4, 2, 4);
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+  }, []);
+
+  // Persist the vehicle's current color + zoom whenever either changes.
+  useEffect(() => {
+    writeShowroomPrefs(modelUrl, { color, zoom });
+  }, [modelUrl, color, zoom]);
 
   // Pre-fetch GLTF file as soon as the component initializes
   useEffect(() => {
@@ -293,7 +384,12 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
           camera={{ position: [4, 2, 4], fov: 45 }}
           gl={{ antialias: true, alpha: true }}
         >
-          <Scene modelUrl={modelUrl} color={color} />
+          <Scene
+            modelUrl={modelUrl}
+            color={color}
+            zoom={zoom}
+            controlsRef={controlsRef}
+          />
         </Canvas>
       </div>
 
@@ -324,6 +420,34 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
               style={{ backgroundColor: paint.value }}
             />
           ))}
+        </div>
+
+        <div className="border-t pt-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+              Zoom
+            </Label>
+            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+              {zoom}%
+            </span>
+          </div>
+          <Slider
+            value={[zoom]}
+            min={0}
+            max={100}
+            step={1}
+            onValueChange={(value) => setZoom(value[0])}
+            className="mt-3"
+            aria-label="Zoom level"
+          />
+          <button
+            type="button"
+            onClick={handleFitToView}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-xs font-medium transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Maximize className="h-3.5 w-3.5" />
+            Fit to view
+          </button>
         </div>
 
         <p className="text-xs text-muted-foreground">

@@ -23,5 +23,7 @@ interface VehicleShowroomClientProps {
 }
 
 export function VehicleShowroomClient({ modelUrl }: VehicleShowroomClientProps) {
-  return <VehicleShowroomInner modelUrl={modelUrl} />;
+  // key={modelUrl} remounts the showroom per vehicle so per-model
+  // preferences (paint color / zoom) are restored fresh for each car.
+  return <VehicleShowroomInner key={modelUrl} modelUrl={modelUrl} />;
 }

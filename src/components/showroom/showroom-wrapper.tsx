@@ -24,5 +24,7 @@ interface ShowroomWrapperProps {
 }
 
 export function ShowroomWrapper({ modelUrl, className }: ShowroomWrapperProps) {
-  return <VehicleShowroom modelUrl={modelUrl} className={className} />;
+  // key={modelUrl} remounts the showroom per vehicle so per-model
+  // preferences (paint color / zoom) are restored fresh for each car.
+  return <VehicleShowroom key={modelUrl} modelUrl={modelUrl} className={className} />;
 }
