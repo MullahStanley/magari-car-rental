@@ -99,8 +99,9 @@ export function VerifyButton({ isVerified }: VerifyButtonProps) {
             <div className="rounded-lg border bg-muted/50 p-3 text-xs text-muted-foreground">
               <p className="font-medium text-foreground">Before you begin</p>
               <p className="mt-1">
-                You will be redirected to Didit's secure verification page where
-                you'll be asked to upload a government-issued ID and complete a
+                You will be redirected to Didit&apos;s secure verification page
+                where you&apos;ll be asked to upload a government-issued ID and
+                complete a
                 brief liveness check. Your data is processed by Didit in
                 accordance with their privacy policy.
               </p>
