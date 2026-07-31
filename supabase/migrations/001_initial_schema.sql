@@ -268,7 +268,7 @@ create policy "Admins can delete vehicle assets"
 -- 6. Seed data (sample vehicles)
 -- ────────────────────────────────────────────────────────────
 insert into public.vehicles (name, brand, category, daily_rate, model_3d_url, description) values
-    ('Model X 2020', 'Tesla', 'Sports', 4000.00, 'models/tesla-model_x_2020.glb', 'Electric performance sedan with ludicrous acceleration.'),
+    ('Model X 2020', 'Tesla', 'Sports', 4000.00, 'models/tesla_model_x_2020.glb', 'Electric performance sedan with ludicrous acceleration.'),
     ('M3 Touring 2023', 'BMW', 'Station Wagon', 10000.00, 'models/2023_bmw_m3_touring.glb', 'Luxury station wagon with commanding presence and all-wheel drive.'),
     ('A-45 AMG 2018', 'Mercedes-Benz', 'Hatchback', 4000.00, 'models/mercedes-benz_a45_amg_2018.glb', 'Elegant hatchback with premium comfort and a heavy road presence.'),
     ('Maybach 2022', 'Mercedes-Maybach', 'Sedan', 40000.00, 'models/mercedes-benz_maybach_2022.glb', 'Luxury sedan with unparalleled comfort and performance.'),

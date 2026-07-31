@@ -6,7 +6,7 @@ import { BookingForm } from "@/components/cars/booking-form";
 import { Badge } from "@/components/ui/badge";
 import { getVehicleById } from "@/lib/vehicles";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency, getStorageUrl } from "@/lib/utils";
+import { formatCurrency, getModelUrl } from "@/lib/utils";
 
 interface VehicleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -39,7 +39,7 @@ export default async function VehicleDetailPage({
   } = await supabase.auth.getUser();
 
   const isVerified = user?.user_metadata?.verified === true;
-  const modelUrl = getStorageUrl(vehicle.model_3d_url);
+  const modelUrl = getModelUrl(vehicle.model_3d_url);
 
   return (
     <div className="container mx-auto px-4 py-8">

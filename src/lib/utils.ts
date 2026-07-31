@@ -13,9 +13,9 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-export function getStorageUrl(path: string): string {
-  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
-  return `${base}/storage/v1/object/public/vehicle-assets/${path.replace(/^\//, "")}`;
+export function getModelUrl(path: string): string {
+  // Serve 3D models from the public folder instead of Supabase Storage.
+  return `/models/${path.replace(/^models\//, "")}`;
 }
 
 export function calculateRentalDays(startDate: Date, endDate: Date): number {
