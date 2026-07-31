@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// Per-session config, NOT a secret and NOT an env var. Get a workflow_id from
-// the console (Workflows) or GET /v3/workflows/, then paste it here.
-const WORKFLOW_ID = "42b3511e-c941-4a7a-af7d-97d68a90902d";
+const WORKFLOW_ID = "ee2cc88c-40f5-435f-a0ca-42550f54928d";
 
 if (!process.env.DIDIT_API_KEY) {
   throw new Error("DIDIT_API_KEY is missing from environment variables");
