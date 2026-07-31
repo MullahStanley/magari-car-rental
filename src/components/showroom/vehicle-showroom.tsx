@@ -10,9 +10,16 @@ import {
   useGLTF,
 } from "@react-three/drei";
 import { Loader2 } from "lucide-react";
+import { Box3, Vector3 } from "three";
 import type { Group, Mesh, MeshStandardMaterial } from "three";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
+
+// Target max dimension for every model after normalization. The GLB files
+// are authored at wildly different unit scales (some ~0.04 units, some
+// ~23 units), which makes some cars invisible dots and others too big for
+// the camera. Normalizing to this size makes them all fit the viewport.
+const NORMALIZED_MODEL_SIZE = 5;
 
 const PAINT_COLORS = [
   { name: "Midnight Black", value: "#1a1a2e" },
@@ -142,7 +149,9 @@ interface VehicleModelProps {
 function VehicleModel({ url, color }: VehicleModelProps) {
   const { scene } = useGLTF(url);
 
-  // Clone the scene and ensure deep isolation for materials
+  // Clone the scene, ensure deep isolation for materials, and normalize
+  // the model to a consistent size so cars of any authored scale fill the
+  // viewport (instead of being tiny dots or overflowing the camera).
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
     clone.traverse((child) => {
@@ -154,6 +163,20 @@ function VehicleModel({ url, color }: VehicleModelProps) {
         }
       }
     });
+
+    // Measure the real bounding box of the model and scale it uniformly.
+    const box = new Box3().setFromObject(clone);
+    const size = box.getSize(new Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    if (maxDim > 0 && Math.abs(maxDim - NORMALIZED_MODEL_SIZE) > 1e-6) {
+      const scale = NORMALIZED_MODEL_SIZE / maxDim;
+      const center = box.getCenter(new Vector3());
+      // Scale the whole subtree, then shift it so its center sits at the
+      // origin (replacing whatever transform the GLB was authored with).
+      clone.scale.setScalar(scale);
+      clone.position.copy(center).multiplyScalar(-scale);
+    }
+
     return clone;
   }, [scene]);
 
