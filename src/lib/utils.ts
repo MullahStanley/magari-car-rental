@@ -15,7 +15,9 @@ export function formatCurrency(amount: number): string {
 
 export function getModelUrl(path: string): string {
   // Serve 3D models from the public folder instead of Supabase Storage.
-  return `/models/${path.replace(/^models\//, "")}`;
+  // DB values look like "models/foo.glb"; be tolerant of leading slashes too.
+  const file = (path || "").replace(/^\/?models\//, "");
+  return `/models/${file}`;
 }
 
 export function calculateRentalDays(startDate: Date, endDate: Date): number {

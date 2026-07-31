@@ -15,22 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { formatCurrency } from "@/lib/utils";
 
 interface VehicleFiltersProps {
   categories: string[];
-  maxPrice: number;
 }
 
-export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
+export function VehicleFilters({ categories }: VehicleFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const currentCategory = searchParams.get("category") ?? "all";
-  const currentMinPrice = Number(searchParams.get("minPrice") ?? 0);
-  const currentMaxPrice = Number(searchParams.get("maxPrice") ?? maxPrice);
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
 
@@ -72,11 +67,7 @@ export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
   };
 
   const hasActiveFilters =
-    currentCategory !== "all" ||
-    currentMinPrice > 0 ||
-    currentMaxPrice < maxPrice ||
-    startDate ||
-    endDate;
+    currentCategory !== "all" || startDate || endDate;
 
   return (
     <div className="space-y-6 rounded-2xl border bg-card p-6">
@@ -113,28 +104,6 @@ export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
             ))}
           </SelectContent>
         </Select>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Price Range</Label>
-          <span className="text-sm text-muted-foreground">
-            {formatCurrency(currentMinPrice)} – {formatCurrency(currentMaxPrice)}
-            /day
-          </span>
-        </div>
-        <Slider
-          min={0}
-          max={maxPrice}
-          step={10}
-          value={[currentMinPrice, currentMaxPrice]}
-          onValueCommit={([min, max]) =>
-            updateParams({
-              minPrice: min > 0 ? String(min) : null,
-              maxPrice: max < maxPrice ? String(max) : null,
-            })
-          }
-        />
       </div>
 
       <div className="space-y-2">

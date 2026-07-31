@@ -38,8 +38,6 @@ export default async function CarsPage({ searchParams }: CarsPageProps)
     getVehicleCategories(),
   ]);
 
-  const maxPrice = Math.max(...vehicles.map((v) => v.daily_rate), 500);
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -52,7 +50,7 @@ export default async function CarsPage({ searchParams }: CarsPageProps)
       <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
           <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-muted" />}>
-            <VehicleFilters categories={categories} maxPrice={maxPrice} />
+            <VehicleFilters categories={categories} />
           </Suspense>
         </aside>
 

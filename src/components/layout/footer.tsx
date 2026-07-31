@@ -36,7 +36,7 @@ export function Footer() {
             <p className="mt-3 text-sm text-muted-foreground">
               support@magari.com
               <br />
-              +1 (555) 123-4567
+              +254 720-376-217
             </p>
           </div>
         </div>

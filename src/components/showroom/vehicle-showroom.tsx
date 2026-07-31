@@ -23,17 +23,102 @@ const PAINT_COLORS = [
   { name: "Champagne Gold", value: "#c9a96e" },
 ];
 
-const BODY_MATERIAL_KEYWORDS = [
-  "body",
+// Materials that carry the actual body paint on these models
+// (verified against the mesh/material names in all 10 GLBs).
+const PAINT_MATERIAL_KEYWORDS = [
   "paint",
-  "car",
+  "primary",
   "exterior",
-  "shell",
-  "chassis",
+  "color",
+];
+
+// Safety net for future models with generically-named paint materials:
+// repaint meshes explicitly named as exterior body panels.
+const BODY_PART_KEYWORDS = [
   "hood",
-  "door",
   "fender",
-  "bumper",
+  "bonnet",
+  "trunk",
+  "wing",
+  "quarter",
+  "cowl",
+  "sill",
+  "apron",
+  "mudguard",
+];
+
+// Parts that must never be repainted: glass/windows, wheels/tires,
+// lights, chrome/trim, badges, interiors, plastics, rubbers, etc.
+const NEVER_PAINT_KEYWORDS = [
+  "glass",
+  "window",
+  "windshiel",
+  "windscreen",
+  "tire",
+  "tyre",
+  "wheel",
+  "rims",
+  "rim_",
+  "hub",
+  "light",
+  "lamp",
+  "tail",
+  "indicator",
+  "fog",
+  "signal",
+  "lens",
+  "beam",
+  "reflect",
+  "emis",
+  "mirror",
+  "chrome",
+  "grille",
+  "grill",
+  "badge",
+  "emblem",
+  "plate",
+  "logo",
+  "brand",
+  "license",
+  "number",
+  "nummern",
+  "seat",
+  "dash",
+  "steering",
+  "carpet",
+  "floor",
+  "interior",
+  "leather",
+  "stitch",
+  "belt",
+  "knob",
+  "pedal",
+  "speedo",
+  "console",
+  "plastic",
+  "rubber",
+  "decal",
+  "trim",
+  "frame",
+  "bracket",
+  "susp",
+  "spring",
+  "axle",
+  "disc",
+  "caliper",
+  "brake",
+  "engine",
+  "exhaust",
+  "muffler",
+  "antenna",
+  "wiper",
+  "latch",
+  "handle",
+  "carbon",
+  "metal",
+  "molding",
+  "garnish",
+  "strip",
 ];
 
 function ShowroomLoader() {
@@ -78,11 +163,18 @@ function VehicleModel({ url, color }: VehicleModelProps) {
       if ((child as Mesh).isMesh) {
         const mesh = child as Mesh;
         const mat = mesh.material as MeshStandardMaterial;
-        const name = (mesh.name + (mat?.name ?? "")).toLowerCase();
+        const meshName = (mesh.name ?? "").toLowerCase();
+        const matName = (mat?.name ?? "").toLowerCase();
+        const combined = `${meshName} ${matName}`;
 
-        const isBody = BODY_MATERIAL_KEYWORDS.some((kw) => name.includes(kw));
+        // Never repaint glass, wheels, lights, trim, interior, etc.
+        if (NEVER_PAINT_KEYWORDS.some((kw) => combined.includes(kw))) return;
 
-        if (isBody && mat) {
+        const isPaint =
+          PAINT_MATERIAL_KEYWORDS.some((kw) => matName.includes(kw)) ||
+          BODY_PART_KEYWORDS.some((kw) => combined.includes(kw));
+
+        if (isPaint && mat) {
           mat.color.set(color);
           mat.metalness = 0.6;
           mat.roughness = 0.3;

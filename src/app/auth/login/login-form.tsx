@@ -40,7 +40,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
 
     try {
       if (isSignUp) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -48,7 +48,17 @@ export function LoginForm({ redirect }: LoginFormProps) {
           },
         });
         if (signUpError) throw signUpError;
-        setError("Check your email to confirm your account.");
+
+        // If a session is returned the account was created (auto-confirm
+        // on) — sign straight in. Otherwise a confirmation email was sent.
+        if (data.session) {
+          router.push(redirect);
+          router.refresh();
+        } else {
+          setError(
+            "Account created! Check your inbox (and spam) to confirm your email, then sign in."
+          );
+        }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email,
@@ -59,7 +69,15 @@ export function LoginForm({ redirect }: LoginFormProps) {
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Authentication failed");
+      const message =
+        err instanceof Error ? err.message : "Authentication failed";
+      if (message.toLowerCase().includes("email not confirmed")) {
+        setError(
+          "Email not confirmed yet — check your inbox (and spam) for the confirmation link."
+        );
+      } else {
+        setError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -118,7 +136,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
           )}
           {error && (
             <p
-              className={`text-sm ${error.includes("Check your email") ? "text-primary" : "text-destructive"}`}
+              className={`text-sm ${error.includes("Account created") ? "text-primary" : "text-destructive"}`}
               role="alert"
             >
               {error}
