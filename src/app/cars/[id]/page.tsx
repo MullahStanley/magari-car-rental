@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import { Suspense } from "react";
-import { Loader2 } from "lucide-react";
+import { Car, Loader2 } from "lucide-react";
 import { VehicleShowroomClient } from "@/components/showroom/vehicle-showroom-client";
 import { BookingForm } from "@/components/cars/booking-form";
 import { Badge } from "@/components/ui/badge";
@@ -58,6 +59,23 @@ export default async function VehicleDetailPage({
           /day
         </span>
       </p>
+
+      {vehicle.image_url ? (
+        <div className="relative mt-8 h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-muted to-muted/50 sm:h-[400px]">
+          <Image
+            src={vehicle.image_url}
+            alt={`${vehicle.brand} ${vehicle.name}`}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 900px"
+            priority
+          />
+        </div>
+      ) : (
+        <div className="mt-8 flex h-[200px] items-center justify-center rounded-2xl bg-gradient-to-br from-muted to-muted/50">
+          <Car className="h-16 w-16 text-muted-foreground/30" />
+        </div>
+      )}
 
       <div className="mt-8">
         <Suspense

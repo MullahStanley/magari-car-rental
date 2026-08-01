@@ -267,14 +267,14 @@ create policy "Admins can delete vehicle assets"
 -- ────────────────────────────────────────────────────────────
 -- 6. Seed data (sample vehicles)
 -- ────────────────────────────────────────────────────────────
-insert into public.vehicles (name, brand, category, daily_rate, model_3d_url, description) values
-    ('Model X 2020', 'Tesla', 'Sports', 4000.00, 'models/tesla_model_x_2020.glb', 'Electric performance sedan with ludicrous acceleration.'),
-    ('M3 Touring 2023', 'BMW', 'Station Wagon', 10000.00, 'models/2023_bmw_m3_touring.glb', 'Luxury station wagon with commanding presence and all-wheel drive.'),
-    ('A-45 AMG 2018', 'Mercedes-Benz', 'Hatchback', 4000.00, 'models/mercedes-benz_a45_amg_2018.glb', 'Elegant hatchback with premium comfort and a heavy road presence.'),
-    ('Maybach 2022', 'Mercedes-Maybach', 'Sedan', 40000.00, 'models/mercedes-benz_maybach_2022.glb', 'Luxury sedan with unparalleled comfort and performance.'),
-    ('Swift 2024', 'Suzuki', 'Sports', 2000.00, 'models/2024_suzuki_swift_hybrid_plus.glb', 'Iconic sports car with precision engineering.'),
-    ('S-Cross 4x2 GLX 2024', 'Suzuki', 'CUV', 3500.00, 'models/2024_suzuki_s-cross_4x2_glx_hybrid.glb', 'Gives the premium feel of a luxury SUV with the efficiency of a compact car'),
-    ('Range Rover Supercharged 2006', 'Land Rover', 'SUV', 12000.00, 'models/2006_land_rover_range_rover_supercharged.glb', 'Versatile luxury SUV for any terrain.'),
-    ('Toyota Hilux 2022', 'Toyota', 'SUV', 10000.00, 'models/2022_toyota_hilux.glb', 'Rugged and reliable SUV for off-road adventures.'),
-    ('Integra DB8 Type-R 2007', 'Honda', 'Sports', 4500.00, 'models/honda_integra_db8_type-r.glb', 'Highly sought-after JDM classic offering a thrilling driving experience.'),
-    ('Fortuner 2021', 'Toyota', 'SUV', 10000.00, 'models/toyota_fortuner_2021.glb', 'Rugged and reliable SUV for off-road adventures.');
+insert into public.vehicles (name, brand, category, daily_rate, model_3d_url, image_url, description) values
+    ('Model X 2020', 'Tesla', 'Sports', 4000.00, 'models/tesla_model_x_2020.glb', 'https://images.unsplash.com/photo-1617788138017-80ad40651399?w=800&h=600&fit=crop', 'Electric performance sedan with ludicrous acceleration.'),
+    ('M3 Touring 2023', 'BMW', 'Station Wagon', 10000.00, 'models/2023_bmw_m3_touring.glb', 'https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&h=600&fit=crop', 'Luxury station wagon with commanding presence and all-wheel drive.'),
+    ('A-45 AMG 2018', 'Mercedes-Benz', 'Hatchback', 4000.00, 'models/mercedes-benz_a45_amg_2018.glb', 'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800&h=600&fit=crop', 'Elegant hatchback with premium comfort and a heavy road presence.'),
+    ('Maybach 2022', 'Mercedes-Maybach', 'Sedan', 40000.00, 'models/mercedes-benz_maybach_2022.glb', 'https://images.unsplash.com/photo-1632245532756-d14ab68555da?w=800&h=600&fit=crop', 'Luxury sedan with unparalleled comfort and performance.'),
+    ('Swift 2024', 'Suzuki', 'Sports', 2000.00, 'models/2024_suzuki_swift_hybrid_plus.glb', 'https://images.unsplash.com/photo-1549317661-bd32c8ce0abb?w=800&h=600&fit=crop', 'Iconic sports car with precision engineering.'),
+    ('S-Cross 4x2 GLX 2024', 'Suzuki', 'CUV', 3500.00, 'models/2024_suzuki_s-cross_4x2_glx_hybrid.glb', 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=800&h=600&fit=crop', 'Gives the premium feel of a luxury SUV with the efficiency of a compact car'),
+    ('Range Rover Supercharged 2006', 'Land Rover', 'SUV', 12000.00, 'models/2006_land_rover_range_rover_supercharged.glb', 'https://images.unsplash.com/photo-1606016159991-dfe4f2746ad5?w=800&h=600&fit=crop', 'Versatile luxury SUV for any terrain.'),
+    ('Toyota Hilux 2022', 'Toyota', 'SUV', 10000.00, 'models/2022_toyota_hilux.glb', 'https://images.unsplash.com/photo-1559416523-140ddc3d238c?w=800&h=600&fit=crop', 'Rugged and reliable SUV for off-road adventures.'),
+    ('Integra DB8 Type-R 2007', 'Honda', 'Sports', 4500.00, 'models/honda_integra_db8_type-r.glb', 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&h=600&fit=crop', 'Highly sought-after JDM classic offering a thrilling driving experience.'),
+    ('Fortuner 2021', 'Toyota', 'SUV', 10000.00, 'models/toyota_fortuner_2021.glb', 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&h=600&fit=crop', 'Rugged and reliable SUV for off-road adventures.');

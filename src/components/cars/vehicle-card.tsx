@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "motion/react";
 import { ArrowRight, Car } from "lucide-react";
 import type { Vehicle } from "@/types/database";
@@ -29,9 +30,19 @@ export function VehicleCard({ vehicle, index = 0 }: VehicleCardProps) {
       transition={{ duration: 0.4, delay: index * 0.08 }}
     >
       <Card className="group overflow-hidden transition-shadow hover:shadow-lg">
-        <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-          <Car className="h-20 w-20 text-muted-foreground/30 transition-transform group-hover:scale-110" />
-          <Badge className="absolute right-3 top-3" variant="secondary">
+        <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+          {vehicle.image_url ? (
+            <Image
+              src={vehicle.image_url}
+              alt={`${vehicle.brand} ${vehicle.name}`}
+              fill
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            />
+          ) : (
+            <Car className="h-20 w-20 text-muted-foreground/30 transition-transform group-hover:scale-110" />
+          )}
+          <Badge className="absolute right-3 top-3 z-10" variant="secondary">
             {vehicle.category}
           </Badge>
         </div>
