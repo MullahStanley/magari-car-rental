@@ -1,22 +1,33 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 
 /**
- * Server-side Supabase client.
- *
- * Auth is handled by Clerk, so this client uses the SERVICE ROLE key.
- * The service role bypasses RLS — all authorization is enforced at the
- * app layer via Clerk's `auth()` / `currentUser()` (e.g. admin role
- * checks and per-user booking filters).
+ * If using Fluid compute: Don't put this client in a global variable. Always create a new client within each
+ * function when using it.
  */
 export async function createClient() {
-  return createSupabaseClient(
+  const cookieStore = await cookies()
+
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
       },
     }
-  );
+  )
 }

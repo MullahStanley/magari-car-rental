@@ -1,9 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateProfile } from "@/lib/profile";
 import { calculateRentalDays, calculateTotalPrice } from "@/lib/utils";
 import type { BookingWithVehicle } from "@/types/database";
 
@@ -23,18 +21,16 @@ export interface BookingResult {
 export async function createBooking(
   input: CreateBookingInput
 ): Promise<BookingResult> {
-  const { userId } = await auth();
+  const supabase = await createClient();
 
-  if (!userId) {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user) {
     return { success: false, error: "You must be logged in to book a vehicle." };
   }
-
-  const profile = await getOrCreateProfile(userId);
-  if (!profile) {
-    return { success: false, error: "Could not load your profile." };
-  }
-
-  const supabase = await createClient();
 
 // Validate dates
 const [startYear, startMonth, startDay] = input.startDate.split("-").map(Number);
@@ -85,7 +81,7 @@ const endDate = new Date(endYear, endMonth - 1, endDay);
   const { data: booking, error: bookingError } = await supabase
     .from("bookings")
     .insert({
-      user_id: profile.id,
+      user_id: user.id,
       vehicle_id: input.vehicleId,
       start_date: input.startDate,
       end_date: input.endDate,
@@ -112,14 +108,13 @@ const endDate = new Date(endYear, endMonth - 1, endDay);
 }
 
 export async function getUserBookings(): Promise<BookingWithVehicle[]> {
-  const { userId } = await auth();
-
-  if (!userId) return [];
-
-  const profile = await getOrCreateProfile(userId);
-  if (!profile) return [];
-
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return [];
 
   const { data, error } = await supabase
     .from("bookings")
@@ -129,7 +124,7 @@ export async function getUserBookings(): Promise<BookingWithVehicle[]> {
       vehicles (name, brand, category, daily_rate, image_url)
     `
     )
-    .eq("user_id", profile.id)
+    .eq("user_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -141,24 +136,21 @@ export async function getUserBookings(): Promise<BookingWithVehicle[]> {
 }
 
 export async function cancelBooking(bookingId: string): Promise<BookingResult> {
-  const { userId } = await auth();
-
-  if (!userId) {
-    return { success: false, error: "You must be logged in." };
-  }
-
-  const profile = await getOrCreateProfile(userId);
-  if (!profile) {
-    return { success: false, error: "You must be logged in." };
-  }
-
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "You must be logged in." };
+  }
 
   const { error } = await supabase
     .from("bookings")
     .update({ status: "cancelled" })
     .eq("id", bookingId)
-    .eq("user_id", profile.id)
+    .eq("user_id", user.id)
     .in("status", ["pending", "confirmed"]);
 
   if (error) {

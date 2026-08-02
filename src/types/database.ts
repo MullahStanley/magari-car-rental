@@ -16,15 +16,13 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          clerk_id: string | null;
           full_name: string | null;
           avatar_url: string | null;
           role: UserRole;
           updated_at: string;
         };
         Insert: {
-          id?: string;
-          clerk_id?: string | null;
+          id: string;
           full_name?: string | null;
           avatar_url?: string | null;
           role?: UserRole;
@@ -32,7 +30,6 @@ export interface Database {
         };
         Update: {
           id?: string;
-          clerk_id?: string | null;
           full_name?: string | null;
           avatar_url?: string | null;
           role?: UserRole;

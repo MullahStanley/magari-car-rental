@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation";
 import { Shield } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateProfile } from "@/lib/profile";
 import { VehicleImageManager } from "@/components/admin/vehicle-image-manager";
 import {
   Card,
@@ -17,15 +15,21 @@ export const metadata = {
 };
 
 export default async function AdminPage() {
-  const { userId } = await auth();
+  const supabase = await createClient();
 
-  if (!userId) redirect("/auth/login?redirect=/admin");
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const profile = await getOrCreateProfile(userId);
+  if (!user) redirect("/auth/login?redirect=/admin");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
   if (profile?.role !== "admin") redirect("/");
-
-  const supabase = await createClient();
 
   const { data: vehicles } = await supabase
     .from("vehicles")

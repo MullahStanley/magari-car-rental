@@ -1,18 +1,21 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { createClient } from "@/lib/supabase/server";
 
-const WORKFLOW_ID = "ee2cc88c-40f5-435f-a0ca-42550f54928d";
+const WORKFLOW_ID = "42b3511e-c941-4a7a-af7d-97d68a90902d";
 
 if (!process.env.DIDIT_API_KEY) {
   throw new Error("DIDIT_API_KEY is missing from environment variables");
 }
 
 export async function POST() {
-  // Identify the user from Clerk's session — never trust an id sent from the
-  // browser blindly.
-  const { userId } = await auth();
+  // Identify the user from YOUR auth/session — never trust an id sent from the browser blindly.
+  const supabase = await createClient();
 
-  if (!userId) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -27,7 +30,7 @@ export async function POST() {
       },
       body: JSON.stringify({
         workflow_id: WORKFLOW_ID,
-        vendor_data: userId, // stable internal user id (Clerk)
+        vendor_data: user.id, // stable internal user id
         callback: `${appUrl}/profile`, // where Didit returns the user after the flow
       }),
     });

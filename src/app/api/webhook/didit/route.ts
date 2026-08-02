@@ -1,13 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
-import { createClerkClient } from "@clerk/nextjs/server";
 import crypto from "node:crypto";
 
 if (!process.env.DIDIT_WEBHOOK_SECRET) {
   throw new Error("DIDIT_WEBHOOK_SECRET is missing from environment variables");
-}
-
-if (!process.env.CLERK_SECRET_KEY) {
-  throw new Error("CLERK_SECRET_KEY is missing from environment variables");
 }
 
 // ── Canonicalisation helpers (load-bearing for X-Signature-V2 HMAC) ────────
@@ -40,19 +35,13 @@ function sortKeys(v: unknown): unknown {
   return v;
 }
 
-// ── Supabase admin client (only for the idempotency ledger) ───────────────
+// ── Supabase admin client ─────────────────────────────────────────────────
 
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-}
-
-// ── Clerk client (source of truth for user verification state) ────────────
-
-function getClerk() {
-  return createClerkClient({ secretKey: process.env.CLERK_SECRET_KEY! });
 }
 
 // ── Idempotency ────────────────────────────────────────────────────────────
@@ -106,35 +95,25 @@ async function markProcessedIfNew(
 }
 
 // ── Session status handlers ────────────────────────────────────────────────
-// vendor_data is the Clerk user ID. We persist verification state to the
-// Clerk user's publicMetadata, which the app reads via currentUser().
 
 async function handleApproved(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   decision: unknown
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      // Summary only in publicMetadata (client-visible, 40KB cap);
-      // raw decision lives in privateMetadata (server-only).
-      publicMetadata: {
-        verified: true,
-        verified_at: new Date().toISOString(),
-        verification_status: "approved",
-      },
-      privateMetadata: {
-        verification_decision: decision,
-      },
-    });
-    console.log("User verified:", vendorData);
-  } catch (error) {
-    console.error("Failed to mark user verified:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      verified: true,
+      verified_at: new Date().toISOString(),
+      verification_decision: decision,
+    },
+  });
+  if (error) console.error("Failed to mark user verified:", error);
+  else console.log("User verified:", vendorData);
 }
 
 async function handleDeclined(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   decision: Record<string, unknown>
 ) {
@@ -158,89 +137,72 @@ async function handleDeclined(
     }
   }
 
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        verified: false,
-        verification_status: "declined",
-        verification_declined_at: new Date().toISOString(),
-        verification_warnings: warnings,
-      },
-      privateMetadata: {
-        verification_decision: decision,
-      },
-    });
-    console.warn("User declined:", vendorData, "warnings:", warnings);
-  } catch (error) {
-    console.error("Failed to mark user declined:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      verified: false,
+      verification_status: "declined",
+      verification_declined_at: new Date().toISOString(),
+      verification_warnings: warnings,
+      verification_decision: decision,
+    },
+  });
+  if (error) console.error("Failed to mark user declined:", error);
+  else console.warn("User declined:", vendorData, "warnings:", warnings);
 }
 
 async function handleInReview(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: { verified: false, verification_status: "pending_review" },
-    });
-    console.log("User pending review:", vendorData);
-  } catch (error) {
-    console.error("Failed to mark user pending review:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: { verified: false, verification_status: "pending_review" },
+  });
+  if (error) console.error("Failed to mark user pending review:", error);
+  else console.log("User pending review:", vendorData);
 }
 
 async function handleInProgress(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: { verified: false, verification_status: "in_progress" },
-    });
-    console.log("User verification in progress:", vendorData);
-  } catch (error) {
-    console.error("Failed to mark user in progress:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: { verified: false, verification_status: "in_progress" },
+  });
+  if (error) console.error("Failed to mark user in progress:", error);
+  else console.log("User verification in progress:", vendorData);
 }
 
 async function handleResubmitted(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   resubmitInfo: Record<string, unknown> | undefined
 ) {
   const nodesToResubmit = resubmitInfo?.nodes_to_resubmit;
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        verified: false,
-        verification_status: "resubmitted",
-        resubmit_nodes: nodesToResubmit,
-        resubmitted_at: new Date().toISOString(),
-      },
-    });
-    console.log("User resubmitted:", vendorData, "nodes:", nodesToResubmit);
-  } catch (error) {
-    console.error("Failed to mark user resubmitted:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      verified: false,
+      verification_status: "resubmitted",
+      resubmit_nodes: nodesToResubmit,
+      resubmitted_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to mark user resubmitted:", error);
+  else console.log("User resubmitted:", vendorData, "nodes:", nodesToResubmit);
 }
 
 async function handleAbandoned(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        verified: false,
-        verification_status: "abandoned",
-        abandoned_at: new Date().toISOString(),
-      },
-    });
-    console.log("User abandoned verification:", vendorData);
-  } catch (error) {
-    console.error("Failed to mark user abandoned:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      verified: false,
+      verification_status: "abandoned",
+      abandoned_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to mark user abandoned:", error);
+  else console.log("User abandoned verification:", vendorData);
 }
 
 function handleAwaitingUser(vendorData: string) {
@@ -248,101 +210,82 @@ function handleAwaitingUser(vendorData: string) {
 }
 
 async function handleExpired(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        verified: false,
-        verification_status: "kyc_expired",
-        expired_at: new Date().toISOString(),
-      },
-    });
-    console.log("Session expired:", vendorData);
-  } catch (error) {
-    console.error("Failed to mark session expired:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      verified: false,
+      verification_status: "kyc_expired",
+      expired_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to mark session expired:", error);
+  else console.log("Session expired:", vendorData);
 }
 
 // ── Entity event handlers (user.* / business.*) ────────────────────────────
 
 async function handleUserStatusUpdated(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   payload: Record<string, unknown>
 ) {
   const entityStatus = payload.status as string | undefined;
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        entity_status: entityStatus,
-        entity_status_updated_at: new Date().toISOString(),
-      },
-    });
-    console.log("User entity status:", vendorData, entityStatus);
-  } catch (error) {
-    console.error("Failed to update user entity status:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      entity_status: entityStatus,
+      entity_status_updated_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to update user entity status:", error);
+  else console.log("User entity status:", vendorData, entityStatus);
 }
 
 async function handleUserDataUpdated(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   payload: Record<string, unknown>
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        entity_data_updated_at: new Date().toISOString(),
-      },
-      privateMetadata: {
-        entity_data: payload.data,
-      },
-    });
-    console.log("User entity data updated:", vendorData);
-  } catch (error) {
-    console.error("Failed to update user entity data:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      entity_data: payload.data,
+      entity_data_updated_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to update user entity data:", error);
+  else console.log("User entity data updated:", vendorData);
 }
 
 async function handleBusinessStatusUpdated(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   payload: Record<string, unknown>
 ) {
   const entityStatus = payload.status as string | undefined;
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        business_status: entityStatus,
-        business_status_updated_at: new Date().toISOString(),
-      },
-    });
-    console.log("Business entity status:", vendorData, entityStatus);
-  } catch (error) {
-    console.error("Failed to update business entity status:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      business_status: entityStatus,
+      business_status_updated_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to update business entity status:", error);
+  else console.log("Business entity status:", vendorData, entityStatus);
 }
 
 async function handleBusinessDataUpdated(
-  clerk: ReturnType<typeof getClerk>,
+  supabase: ReturnType<typeof getSupabase>,
   vendorData: string,
   payload: Record<string, unknown>
 ) {
-  try {
-    await clerk.users.updateUser(vendorData, {
-      publicMetadata: {
-        business_data_updated_at: new Date().toISOString(),
-      },
-      privateMetadata: {
-        business_data: payload.data,
-      },
-    });
-    console.log("Business entity data updated:", vendorData);
-  } catch (error) {
-    console.error("Failed to update business entity data:", error);
-  }
+  const { error } = await supabase.auth.admin.updateUserById(vendorData, {
+    user_metadata: {
+      business_data: payload.data,
+      business_data_updated_at: new Date().toISOString(),
+    },
+  });
+  if (error) console.error("Failed to update business entity data:", error);
+  else console.log("Business entity data updated:", vendorData);
 }
 
 // ── Transaction / activity handlers ────────────────────────────────────────
@@ -452,45 +395,43 @@ export async function POST(req: Request) {
     return new Response("ok");
   }
 
-  const clerk = getClerk();
-
   // 6. Process by webhook_type, then by status/event specifics.
   try {
     switch (webhookType) {
       case "status.updated":
         switch (status) {
           case "Approved":
-            await handleApproved(clerk, vendorData, parsed.decision);
+            await handleApproved(supabase, vendorData, parsed.decision);
             break;
           case "Declined":
             await handleDeclined(
-              clerk,
+              supabase,
               vendorData,
               parsed.decision as Record<string, unknown>
             );
             break;
           case "In Review":
-            await handleInReview(clerk, vendorData);
+            await handleInReview(supabase, vendorData);
             break;
           case "In Progress":
-            await handleInProgress(clerk, vendorData);
+            await handleInProgress(supabase, vendorData);
             break;
           case "Resubmitted":
             await handleResubmitted(
-              clerk,
+              supabase,
               vendorData,
               parsed.resubmit_info as Record<string, unknown> | undefined
             );
             break;
           case "Abandoned":
-            await handleAbandoned(clerk, vendorData);
+            await handleAbandoned(supabase, vendorData);
             break;
           case "Awaiting User":
             handleAwaitingUser(vendorData);
             break;
           case "Expired":
           case "Kyc Expired":
-            await handleExpired(clerk, vendorData);
+            await handleExpired(supabase, vendorData);
             break;
           case "Not Started":
             console.log("Session not started:", parsed.event_id);
@@ -510,7 +451,7 @@ export async function POST(req: Request) {
 
       case "user.status.updated":
         await handleUserStatusUpdated(
-          clerk,
+          supabase,
           vendorData,
           parsed as Record<string, unknown>
         );
@@ -518,7 +459,7 @@ export async function POST(req: Request) {
 
       case "user.data.updated":
         await handleUserDataUpdated(
-          clerk,
+          supabase,
           vendorData,
           parsed as Record<string, unknown>
         );
@@ -526,7 +467,7 @@ export async function POST(req: Request) {
 
       case "business.status.updated":
         await handleBusinessStatusUpdated(
-          clerk,
+          supabase,
           vendorData,
           parsed as Record<string, unknown>
         );
@@ -534,7 +475,7 @@ export async function POST(req: Request) {
 
       case "business.data.updated":
         await handleBusinessDataUpdated(
-          clerk,
+          supabase,
           vendorData,
           parsed as Record<string, unknown>
         );
