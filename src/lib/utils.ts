@@ -14,10 +14,15 @@ export function formatCurrency(amount: number): string {
 }
 
 export function getModelUrl(path: string): string {
-  // Serve 3D models from the public folder instead of Supabase Storage.
-  // DB values look like "models/foo.glb"; be tolerant of leading slashes too.
-  const file = (path || "").replace(/^\/?models\//, "");
-  return `/models/${file}`;
+  // Serve 3D models from the public `vehicle-assets` bucket in Supabase
+  // Storage (the app never ships the multi-hundred-MB GLB binaries in git).
+  // DB values look like "models/foo.glb"; be tolerant of leading slashes
+  // and already-absolute URLs.
+  const trimmed = (path || "").trim();
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  const file = trimmed.replace(/^\/?models\//, "");
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  return `${base}/storage/v1/object/public/vehicle-assets/models/${file}`;
 }
 
 export function getImageUrl(url: string | null | undefined): string | null {
