@@ -7,7 +7,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createClient } from "@/lib/supabase/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { getOrCreateProfile } from "@/lib/profile";
 import { VerifyButton } from "@/components/verification/verify-button";
 
 export const metadata = {
@@ -15,21 +16,22 @@ export const metadata = {
 };
 
 export default async function ProfilePage() {
-  const supabase = await createClient();
+  const { userId } = await auth();
+  const user = await currentUser();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  if (!userId || !user) redirect("/auth/login?redirect=/profile");
 
-  if (!user) redirect("/auth/login?redirect=/profile");
+  const profile = await getOrCreateProfile(userId, {
+    fullName:
+      [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+      user.emailAddresses[0]?.emailAddress ||
+      null,
+    email: user.emailAddresses[0]?.emailAddress ?? null,
+  });
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  const isVerified = user.user_metadata?.verified === true;
+  const isVerified =
+    typeof user.publicMetadata?.verified === "boolean" &&
+    user.publicMetadata.verified === true;
 
   return (
     <div className="container mx-auto max-w-lg px-4 py-8">
@@ -44,7 +46,9 @@ export default async function ProfilePage() {
             </div>
             <div>
               <CardTitle>{profile?.full_name ?? "User"}</CardTitle>
-              <CardDescription>{user.email}</CardDescription>
+              <CardDescription>
+                {user.emailAddresses[0]?.emailAddress}
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -56,7 +60,7 @@ export default async function ProfilePage() {
           <div className="flex justify-between">
             <span className="text-muted-foreground">Member since</span>
             <span>
-              {new Date(user.created_at).toLocaleDateString("en-US", {
+              {new Date(user.createdAt).toLocaleDateString("en-US", {
                 month: "long",
                 year: "numeric",
               })}

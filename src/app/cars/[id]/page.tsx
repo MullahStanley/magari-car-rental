@@ -6,7 +6,7 @@ import { VehicleShowroomClient } from "@/components/showroom/vehicle-showroom-cl
 import { BookingForm } from "@/components/cars/booking-form";
 import { Badge } from "@/components/ui/badge";
 import { getVehicleById } from "@/lib/vehicles";
-import { createClient } from "@/lib/supabase/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { formatCurrency, getImageUrl, getModelUrl } from "@/lib/utils";
 
 interface VehicleDetailPageProps {
@@ -28,18 +28,15 @@ export default async function VehicleDetailPage({
   params,
 }: VehicleDetailPageProps) {
   const { id } = await params;
-  const [vehicle, supabase] = await Promise.all([
-    getVehicleById(id),
-    createClient(),
-  ]);
+  const vehicle = await getVehicleById(id);
 
   if (!vehicle) notFound();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { userId } = await auth();
+  const user = userId ? await currentUser() : null;
 
-  const isVerified = user?.user_metadata?.verified === true;
+  const isVerified =
+    user?.publicMetadata?.verified === true;
   const modelUrl = getModelUrl(vehicle.model_3d_url);
   const imageUrl = getImageUrl(vehicle.image_url);
 
@@ -95,7 +92,7 @@ export default async function VehicleDetailPage({
           vehicleId={vehicle.id}
           dailyRate={vehicle.daily_rate}
           vehicleName={vehicle.name}
-          isAuthenticated={!!user}
+          isAuthenticated={!!userId}
           isVerified={isVerified}
         />
       </div>

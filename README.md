@@ -97,24 +97,34 @@ Visit [http://localhost:3000](http://localhost:3000).
 
 ## Authentication
 
-Sign-up and sign-in are handled by **Supabase Auth**. Credentials are stored in
-Supabase's `auth.users` table, and a database trigger (`handle_new_user`)
-automatically creates a matching row in `public.profiles` on sign-up.
+Sign-up and sign-in are handled by **Clerk**. Add your keys to `.env.local`:
 
-**Email confirmation is currently disabled** (`mailer_autoconfirm = true`), so
-signing up creates the account and logs you in immediately. To require email
-confirmation later:
+```env
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+```
 
-1. In the Supabase dashboard go to **Authentication → Providers → Email** and
-turn on **Confirm email**.
-2. Configure **Authentication → SMTP** settings with a real provider so
-confirmation emails are actually delivered.
-3. Add your site URL to **Authentication → URL Configuration → Redirect URLs**
-(e.g. `https://your-app.vercel.app/**`).
+Then run `npm run dev` and sign up through the **Sign In** / **Sign Up**
+buttons in the header.
 
-The sign-up form already handles both modes: with auto-confirm it signs you in
-directly, and with confirmation enabled it shows a friendly "check your inbox"
-messsage.
+**How it maps to the data layer:** Clerk is the identity provider, but the
+bookings / admin / KYC data stays in Supabase.
+
+- `profiles` rows are created lazily the first time a Clerk user needs one
+  (`src/lib/profile.ts`), keyed by `profiles.clerk_id`.
+- Server-side Supabase access uses the **service role key** (RLS is bypassed;
+  authorization is enforced in the app via Clerk's `auth()`/`currentUser()`).
+- The Didit KYC webhook writes verification state to the Clerk user's
+  `publicMetadata` (`verified`, `verification_status`, ...), which the profile
+  and booking pages read back via `currentUser()`.
+
+To make yourself an admin (for uploading vehicle images):
+
+```sql
+update public.profiles set role = 'admin' where clerk_id = 'your-clerk-user-id';
+```
+
+You can find your Clerk user ID in the Clerk Dashboard → Users.
 
 ---
 

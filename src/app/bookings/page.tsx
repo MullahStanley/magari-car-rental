@@ -1,5 +1,7 @@
+import { redirect } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
+import { auth } from "@clerk/nextjs/server";
 import { CalendarDays, Car } from "lucide-react";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +31,9 @@ const statusVariant: Record<
 };
 
 export default async function BookingsPage() {
+  const { userId } = await auth();
+  if (!userId) redirect("/auth/login?redirect=/bookings");
+
   const bookings = await getUserBookings();
 
   return (

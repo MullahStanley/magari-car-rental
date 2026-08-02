@@ -1,6 +1,7 @@
 "use client";
 
-import { SignIn } from "@clerk/nextjs";
+import { useSearchParams } from "next/navigation";
+import { SignUp } from "@clerk/nextjs";
 import {
   Card,
   CardContent,
@@ -9,23 +10,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-interface LoginFormProps {
-  redirect?: string;
-}
+export function SignUpForm() {
+  const searchParams = useSearchParams();
+  const redirect =
+    searchParams.get("redirect") ??
+    searchParams.get("redirect_url") ??
+    searchParams.get("next") ??
+    "/cars";
 
-export function LoginForm({ redirect = "/cars" }: LoginFormProps) {
   return (
     <Card className="w-full max-w-md">
       <CardHeader>
-        <CardTitle>Welcome Back</CardTitle>
+        <CardTitle>Create Account</CardTitle>
         <CardDescription>
-          Sign in to manage your bookings and more
+          Sign up to book vehicles and track your rentals
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <SignIn
+        <SignUp
           forceRedirectUrl={redirect}
-          signUpUrl="/auth/signup"
+          signInUrl="/auth/login"
           appearance={{
             elements: {
               rootBox: "w-full",

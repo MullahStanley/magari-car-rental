@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { Car, LogIn, LogOut, Menu, User, X } from "lucide-react";
 import { useState } from "react";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,19 +15,21 @@ const navLinks = [
   { href: "/bookings", label: "My Bookings" },
 ];
 
-interface HeaderProps {
-  user: { email?: string } | null;
-}
-
-export function Header({ user }: HeaderProps) {
+export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
+    await signOut();
     window.location.href = "/";
   };
+
+  const displayName =
+    user?.primaryEmailAddress?.emailAddress?.split("@")[0] ??
+    user?.username ??
+    "Account";
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-md">
@@ -62,12 +64,12 @@ export function Header({ user }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          {user ? (
+          {isLoaded && isSignedIn ? (
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link href="/profile">
                   <User className="mr-2 h-4 w-4" />
-                  {user.email?.split("@")[0]}
+                  {displayName}
                 </Link>
               </Button>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
@@ -120,7 +122,7 @@ export function Header({ user }: HeaderProps) {
               </Link>
             ))}
             <div className="border-t pt-3">
-              {user ? (
+              {isLoaded && isSignedIn ? (
                 <Button
                   variant="outline"
                   className="w-full"
