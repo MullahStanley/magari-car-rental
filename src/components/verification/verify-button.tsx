@@ -31,7 +31,11 @@ export function VerifyButton({ isVerified }: VerifyButtonProps) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to start verification");
+        // Real error (e.g. Didit workflow/credits issue) is logged server-side.
+        console.error("Verification session create failed:", data);
+        throw new Error(
+          "There is an issue with our server, services will be up soon."
+        );
       }
 
       if (data.url) {
