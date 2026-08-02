@@ -34,7 +34,7 @@ export function Header({ user }: HeaderProps) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
           <Car className="h-6 w-6 text-primary" />
-          <span>Magari</span>
+          <span>Magari Car-Rental</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
