@@ -9,7 +9,7 @@ export function Footer() {
           <div>
             <Link href="/" className="flex items-center gap-2 font-bold text-lg">
               <Car className="h-5 w-5 text-primary" />
-              Magari
+              Magari Car-Rental
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">
               Premium car rentals with interactive 3D previews. Drive your dream
