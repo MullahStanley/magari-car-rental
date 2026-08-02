@@ -40,3 +40,4 @@ next-env.d.ts
 /models/
 /public/models/
 /supabase/models/
+/supabase/.temp
