@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Car, Shield, Sparkles, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { HeroShowroom } from "@/components/showroom/hero-showroom";
 import { getVehicles } from "@/lib/vehicles";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getImageUrl } from "@/lib/utils";
 
 const features = [
   {
@@ -106,35 +107,50 @@ export default async function HomePage() {
             </p>
           </div>
           <div className="mt-12 grid gap-8 md:grid-cols-3">
-            {featuredVehicles.map((vehicle) => (
-              <Link
-                key={vehicle.id}
-                href={`/cars/${vehicle.id}`}
-                className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-1"
-              >
-                <div className="flex h-32 items-center justify-center rounded-xl bg-gradient-to-br from-muted to-muted/50 mb-4">
-                  <Car className="h-16 w-16 text-muted-foreground/30 transition-transform group-hover:scale-110" />
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="text-xs">
-                    {vehicle.category}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">
-                    {vehicle.brand}
-                  </span>
-                </div>
-                <h3 className="text-lg font-semibold">{vehicle.name}</h3>
-                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                  {vehicle.description}
-                </p>
-                <p className="mt-3 text-xl font-bold">
-                  {formatCurrency(vehicle.daily_rate)}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    /day
-                  </span>
-                </p>
-              </Link>
-            ))}
+            {featuredVehicles.map((vehicle) => {
+              const imageUrl = getImageUrl(vehicle.image_url);
+              return (
+                <Link
+                  key={vehicle.id}
+                  href={`/cars/${vehicle.id}`}
+                  className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-1"
+                >
+                  <div className="relative mb-4 h-32 overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/50">
+                    {imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        alt={`${vehicle.brand} ${vehicle.name}`}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center">
+                        <Car className="h-16 w-16 text-muted-foreground/30 transition-transform group-hover:scale-110" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-2 flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">
+                      {vehicle.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {vehicle.brand}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold">{vehicle.name}</h3>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                    {vehicle.description}
+                  </p>
+                  <p className="mt-3 text-xl font-bold">
+                    {formatCurrency(vehicle.daily_rate)}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      /day
+                    </span>
+                  </p>
+                </Link>
+              );
+            })}
           </div>
           <div className="mt-12 text-center">
             <Button size="lg" variant="outline" asChild>
