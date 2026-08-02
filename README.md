@@ -95,6 +95,29 @@ Visit [http://localhost:3000](http://localhost:3000).
 
 ---
 
+## Authentication
+
+Sign-up and sign-in are handled by **Supabase Auth**. Credentials are stored in
+Supabase's `auth.users` table, and a database trigger (`handle_new_user`)
+automatically creates a matching row in `public.profiles` on sign-up.
+
+**Email confirmation is currently disabled** (`mailer_autoconfirm = true`), so
+signing up creates the account and logs you in immediately. To require email
+confirmation later:
+
+1. In the Supabase dashboard go to **Authentication → Providers → Email** and
+turn on **Confirm email**.
+2. Configure **Authentication → SMTP** settings with a real provider so
+confirmation emails are actually delivered.
+3. Add your site URL to **Authentication → URL Configuration → Redirect URLs**
+(e.g. `https://your-app.vercel.app/**`).
+
+The sign-up form already handles both modes: with auto-confirm it signs you in
+directly, and with confirmation enabled it shows a friendly "check your inbox"
+messsage.
+
+---
+
 ## Database Overview
 
 | Table | Purpose |

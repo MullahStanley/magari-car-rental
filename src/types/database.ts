@@ -115,5 +115,8 @@ export type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
 export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 export interface BookingWithVehicle extends Booking {
-  vehicles: Pick<Vehicle, "name" | "brand" | "category" | "daily_rate">;
+  vehicles: Pick<
+    Vehicle,
+    "name" | "brand" | "category" | "daily_rate" | "image_url"
+  >;
 }

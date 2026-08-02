@@ -121,7 +121,7 @@ export async function getUserBookings(): Promise<BookingWithVehicle[]> {
     .select(
       `
       *,
-      vehicles (name, brand, category, daily_rate)
+      vehicles (name, brand, category, daily_rate, image_url)
     `
     )
     .eq("user_id", user.id)
