@@ -20,6 +20,21 @@ export function getModelUrl(path: string): string {
   return `/models/${file}`;
 }
 
+export function getImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  // Absolute URLs (Supabase Storage public URLs, Unsplash, etc.) are already
+  // fully qualified — pass them through, just URL-encoding spaces/unicode.
+  if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed);
+  // Root-relative paths (e.g. "/images/foo.jpg") resolve from the site root.
+  if (trimmed.startsWith("/")) return encodeURI(trimmed);
+  // DB seed values look like "images/foo.jpg" — serve them from the app's
+  // public folder at the site root, mirroring getModelUrl().
+  const file = trimmed.replace(/^images\//, "");
+  return encodeURI(`/images/${file}`);
+}
+
 export function calculateRentalDays(startDate: Date, endDate: Date): number {
   const msPerDay = 1000 * 60 * 60 * 24;
   return Math.ceil((endDate.getTime() - startDate.getTime()) / msPerDay) + 1;

@@ -13,7 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getImageUrl } from "@/lib/utils";
 
 interface VehicleImageManagerProps {
   vehicleId: string;
@@ -158,7 +158,7 @@ export function VehicleImageManager({
     }
   };
 
-  const displayUrl = previewUrl || currentImageUrl;
+  const displayUrl = previewUrl || getImageUrl(currentImageUrl);
 
   return (
     <div className="flex items-start gap-4">

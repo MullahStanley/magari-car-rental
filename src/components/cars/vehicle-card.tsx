@@ -15,7 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, getImageUrl } from "@/lib/utils";
 
 interface VehicleCardProps {
   vehicle: Vehicle;
@@ -23,6 +23,8 @@ interface VehicleCardProps {
 }
 
 export function VehicleCard({ vehicle, index = 0 }: VehicleCardProps) {
+  const imageUrl = getImageUrl(vehicle.image_url);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -31,9 +33,9 @@ export function VehicleCard({ vehicle, index = 0 }: VehicleCardProps) {
     >
       <Card className="group overflow-hidden transition-shadow hover:shadow-lg">
         <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-          {vehicle.image_url ? (
+          {imageUrl ? (
             <Image
-              src={vehicle.image_url}
+              src={imageUrl}
               alt={`${vehicle.brand} ${vehicle.name}`}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"

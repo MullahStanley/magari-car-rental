@@ -7,7 +7,7 @@ import { BookingForm } from "@/components/cars/booking-form";
 import { Badge } from "@/components/ui/badge";
 import { getVehicleById } from "@/lib/vehicles";
 import { createClient } from "@/lib/supabase/server";
-import { formatCurrency, getModelUrl } from "@/lib/utils";
+import { formatCurrency, getImageUrl, getModelUrl } from "@/lib/utils";
 
 interface VehicleDetailPageProps {
   params: Promise<{ id: string }>;
@@ -41,6 +41,7 @@ export default async function VehicleDetailPage({
 
   const isVerified = user?.user_metadata?.verified === true;
   const modelUrl = getModelUrl(vehicle.model_3d_url);
+  const imageUrl = getImageUrl(vehicle.image_url);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -60,10 +61,10 @@ export default async function VehicleDetailPage({
         </span>
       </p>
 
-      {vehicle.image_url ? (
+      {imageUrl ? (
         <div className="relative mt-8 h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-muted to-muted/50 sm:h-[400px]">
           <Image
-            src={vehicle.image_url}
+            src={imageUrl}
             alt={`${vehicle.brand} ${vehicle.name}`}
             fill
             className="object-cover"
