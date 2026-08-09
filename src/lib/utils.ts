@@ -13,16 +13,29 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+// Bump this every time the GLBs are re-uploaded (npm run upload:models) so
+// browsers/CDNs that have cached a model under its plain URL can't keep
+// serving the stale file. It's appended as ?v=… to every model URL the app
+// builds, and also busts drei's in-memory loader cache keyed by URL.
+const MODEL_ASSET_VERSION = 2;
+
+function appendModelVersion(url: string): string {
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}v=${MODEL_ASSET_VERSION}`;
+}
+
 export function getModelUrl(path: string): string {
   // Serve 3D models from the public `vehicle-assets` bucket in Supabase
-  // Storage (the app never ships the multi-hundred-MB GLB binaries in git).
-  // DB values look like "models/foo.glb"; be tolerant of leading slashes
-  // and already-absolute URLs.
+  // Storage (the app never ships the large GLB binaries in git). DB values
+  // look like "models/foo.glb"; be tolerant of leading slashes and
+  // already-absolute URLs.
   const trimmed = (path || "").trim();
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (/^https?:\/\//i.test(trimmed)) return appendModelVersion(trimmed);
   const file = trimmed.replace(/^\/?models\//, "");
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  return `${base}/storage/v1/object/public/vehicle-assets/models/${file}`;
+  return appendModelVersion(
+    `${base}/storage/v1/object/public/vehicle-assets/models/${file}`
+  );
 }
 
 export function getImageUrl(url: string | null | undefined): string | null {

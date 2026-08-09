@@ -188,7 +188,11 @@ interface VehicleModelProps {
 }
 
 function VehicleModel({ url, color }: VehicleModelProps) {
-  const { scene } = useGLTF(url);
+  // useGLTF(path, useDraco, useMeshopt): the optimized GLBs ship with
+  // EXT_meshopt_compression geometry (see scripts/optimize-models.sh), which
+  // cuts download size ~80% with no detail loss. The meshopt WASM decoder is
+  // bundled with three-stdlib, so this works offline with no extra setup.
+  const { scene } = useGLTF(url, false, true);
 
   // Clone the scene, ensure deep isolation for materials, and normalize
   // the model to a consistent size so cars of any authored scale fill the
@@ -366,9 +370,10 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
     writeShowroomPrefs(modelUrl, { color, zoom });
   }, [modelUrl, color, zoom]);
 
-  // Pre-fetch GLTF file as soon as the component initializes
+  // Pre-fetch GLTF file as soon as the component initializes. Meshopt is
+  // enabled to match the optimized files in scripts/optimize-models.sh.
   useEffect(() => {
-    useGLTF.preload(modelUrl);
+    useGLTF.preload(modelUrl, false, true);
   }, [modelUrl]);
 
   return (
@@ -381,8 +386,15 @@ export function VehicleShowroom({ modelUrl, className }: VehicleShowroomProps) {
       <div className="relative h-[320px] flex-1 overflow-hidden rounded-2xl bg-gradient-to-b from-muted/50 to-muted sm:h-[420px] lg:h-[500px]">
         <Canvas
           shadows
+          dpr={[1, 2]}
           camera={{ position: [4, 2, 4], fov: 45 }}
-          gl={{ antialias: true, alpha: true }}
+          gl={{
+            antialias: true,
+            alpha: true,
+            // Prioritize the discrete GPU where available; combined with the
+            // DPR cap above this keeps mobile fill-rate in check.
+            powerPreference: "high-performance",
+          }}
         >
           <Scene
             modelUrl={modelUrl}

@@ -142,6 +142,21 @@ update public.profiles set role = 'admin' where id = 'your-user-uuid';
 
 A client-side React Three Fiber component that loads `.glb` models from Supabase Storage. It includes lighting, orbit controls (zoom disabled so users don't clip inside the model), a loading spinner, and a color picker that updates the car body material.
 
+**Model optimization:** the GLBs in `public/models/` are compressed with
+[gltf-transform](https://gltf-transform.dev) using `EXT_meshopt_compression`
+geometry (no decimation, so interior detailing is kept 1:1 — verify with
+`node scripts/verify-glb.mjs <orig> <opt>`). This cuts download size from
+~361 MB to ~68 MB total. The showroom enables meshopt decoding via
+`useGLTF(url, false, true)` (the WASM decoder ships with `three-stdlib`, so no
+CDN is needed), and caps the canvas at 2× device-pixel-ratio for mobile
+fill-rate. After re-optimizing, deploy the new files with
+`npm run upload:models -- --service-role-key <KEY> --url <SUPABASE_URL>`;
+originals are kept in `supabase/models/`.
+
+Model URLs include a cache-busting `?v=…` param (see `MODEL_ASSET_VERSION` in
+`src/lib/utils.ts`). **Bump it whenever you re-upload models** so browsers and
+CDNs fetch the new files instead of serving stale cached copies.
+
 ### Fleet Catalog (`/cars`)
 
 Server-rendered page that fetches vehicles from Supabase. Client-side filters update URL query parameters (`category`, `minPrice`, `maxPrice`, `startDate`, `endDate`) so the page state is shareable.
@@ -160,6 +175,8 @@ Users pick a date range using a calendar component. Past dates and invalid range
 | `npm run build` | Production build |
 | `npm run start` | Run production server |
 | `npm run lint` | Run ESLint |
+| `npm run optimize:models` | Meshopt-compress the GLBs in `public/models/` (~80% smaller, no detail loss) |
+| `npm run upload:models` | Upload optimized GLBs to the `vehicle-assets` bucket (needs service role key) |
 
 ---
 
