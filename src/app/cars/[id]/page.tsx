@@ -39,7 +39,6 @@ export default async function VehicleDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
 
-  const isVerified = user?.user_metadata?.verified === true;
   const modelUrl = getModelUrl(vehicle.model_3d_url);
   const imageUrl = getImageUrl(vehicle.image_url);
 
@@ -62,7 +61,7 @@ export default async function VehicleDetailPage({
       </p>
 
       {imageUrl ? (
-        <div className="relative mt-8 h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-muted to-muted/50 sm:h-[400px]">
+        <div className="relative mt-8 h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-muted to-muted/40 sm:h-[400px]">
           <Image
             src={imageUrl}
             alt={`${vehicle.brand} ${vehicle.name}`}
@@ -73,7 +72,7 @@ export default async function VehicleDetailPage({
           />
         </div>
       ) : (
-        <div className="mt-8 flex h-[200px] items-center justify-center rounded-2xl bg-gradient-to-br from-muted to-muted/50">
+        <div className="mt-8 flex h-[200px] items-center justify-center rounded-2xl bg-gradient-to-br from-primary/10 via-muted to-muted/40">
           <Car className="h-16 w-16 text-muted-foreground/30" />
         </div>
       )}
@@ -96,7 +95,6 @@ export default async function VehicleDetailPage({
           dailyRate={vehicle.daily_rate}
           vehicleName={vehicle.name}
           isAuthenticated={!!user}
-          isVerified={isVerified}
         />
       </div>
     </div>

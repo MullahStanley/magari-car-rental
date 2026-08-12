@@ -278,7 +278,7 @@ export function VehicleImageManager({
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              className="flex items-center gap-1 text-xs text-green-600"
+              className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400"
             >
               <CheckCircle2 className="h-3 w-3" />
               Image saved successfully

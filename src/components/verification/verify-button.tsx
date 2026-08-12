@@ -61,7 +61,8 @@ export function VerifyButton({ isVerified }: VerifyButtonProps) {
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
+      <div className="h-1.5 bg-brand-gradient" aria-hidden="true" />
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {isVerified ? (
@@ -72,19 +73,19 @@ export function VerifyButton({ isVerified }: VerifyButtonProps) {
           Identity Verification
           {isVerified ? (
             <Badge
-              variant="default"
-              className="bg-green-500 hover:bg-green-600"
+              variant="outline"
+              className="border-transparent bg-green-500 text-white hover:bg-green-600"
             >
               Verified
             </Badge>
           ) : (
-            <Badge variant="secondary">Required</Badge>
+            <Badge variant="secondary">Optional</Badge>
           )}
         </CardTitle>
         <CardDescription>
           {isVerified
-            ? "Your identity has been verified. You can now book vehicles."
-            : "Verify your identity to unlock booking privileges. This is required before you can rent a vehicle."}
+            ? "Your identity has been verified. You can book vehicles freely."
+            : "Verification is optional — our team manually reviews and confirms every booking."}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -95,8 +96,9 @@ export function VerifyButton({ isVerified }: VerifyButtonProps) {
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Verification involves a quick ID check through our secure partner
-              Didit. This helps us maintain trust and safety for all users.
+              You can book vehicles without verification. Verifying your
+              identity through our secure partner Didit is entirely optional
+              and helps us process your bookings faster.
             </p>
 
             {/* Consent disclosure — shown before verification opens */}

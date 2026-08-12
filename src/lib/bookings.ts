@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { calculateRentalDays, calculateTotalPrice } from "@/lib/utils";
-import type { BookingWithVehicle } from "@/types/database";
+import type {
+  AdminBookingRow,
+  BookingStatus,
+  BookingWithVehicle,
+} from "@/types/database";
+import { sendBookingStatusEmail } from "@/lib/emails";
 
 export interface CreateBookingInput {
   vehicleId: string;
@@ -161,4 +166,78 @@ export async function cancelBooking(bookingId: string): Promise<BookingResult> {
   revalidatePath("/cars");
 
   return { success: true, bookingId };
+}
+
+export interface AdminBookingsResult {
+  bookings: AdminBookingRow[];
+  error: string | null;
+}
+
+/**
+ * Admin dashboard — all bookings with vehicle + user info, pending first.
+ * Backed by the security-definer RPC `admin_get_bookings` (migration 006),
+ * which verifies the caller is an admin and bypasses per-user RLS.
+ */
+export async function getAdminBookings(): Promise<AdminBookingsResult> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("admin_get_bookings");
+
+  if (error) {
+    console.error("Failed to fetch admin bookings:", error.message);
+    return { bookings: [], error: error.message };
+  }
+
+  return { bookings: (data ?? []) as AdminBookingRow[], error: null };
+}
+
+/**
+ * Admin action — confirm / decline / complete / cancel a booking.
+ * Backed by the security-definer RPC `admin_update_booking_status`.
+ */
+export async function updateBookingStatus(
+  bookingId: string,
+  status: BookingStatus
+): Promise<BookingResult> {
+  const supabase = await createClient();
+
+  // Remember what the booking was before the change so we can word the
+  // notification correctly (a pending booking declined vs. a confirmed
+  // booking cancelled). Only needed when the change triggers an email;
+  // admins can read all bookings via RLS.
+  let previousStatus: BookingStatus | undefined;
+  if (status === "confirmed" || status === "cancelled") {
+    const { data: existing } = await supabase
+      .from("bookings")
+      .select("status")
+      .eq("id", bookingId)
+      .single();
+    previousStatus = existing?.status;
+  }
+
+  const { error } = await supabase.rpc("admin_update_booking_status", {
+    p_booking_id: bookingId,
+    p_status: status,
+  });
+
+  if (error) {
+    console.error("Failed to update booking status:", error.message);
+    return {
+      success: false,
+      error:
+        error.message === "Forbidden: admin role required"
+          ? "You don't have permission to do this."
+          : error.message,
+    };
+  }
+
+  // Notify the customer when their booking is confirmed or declined/cancelled
+  // by an admin. Fire-and-forget with internal error handling — a failed
+  // email must never roll back a successful status change.
+  await sendBookingStatusEmail({ bookingId, newStatus: status, previousStatus });
+
+  revalidatePath("/admin");
+  revalidatePath("/bookings");
+  revalidatePath("/cars");
+  return { success: true };
 }

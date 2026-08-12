@@ -32,7 +32,7 @@ export function VehicleCard({ vehicle, index = 0 }: VehicleCardProps) {
       transition={{ duration: 0.4, delay: index * 0.08 }}
     >
       <Card className="group overflow-hidden transition-shadow hover:shadow-lg">
-        <div className="relative flex h-48 items-center justify-center bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+        <div className="relative flex h-48 items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 via-muted to-muted/40">
           {imageUrl ? (
             <Image
               src={imageUrl}

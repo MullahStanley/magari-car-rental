@@ -40,7 +40,9 @@ export default async function BookingsPage() {
 
       {bookings.length === 0 ? (
         <div className="mt-12 flex flex-col items-center justify-center rounded-2xl border bg-muted/30 py-20">
-          <CalendarDays className="h-12 w-12 text-muted-foreground/50" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 shadow-sm">
+            <CalendarDays className="h-8 w-8 text-primary" />
+          </div>
           <h2 className="mt-4 text-lg font-semibold">No bookings yet</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Browse our fleet and book your first ride
@@ -56,7 +58,7 @@ export default async function BookingsPage() {
                   {/* Vehicle image — object-contain keeps the whole car
                       visible and centered instead of cropping it. Fixed
                       height + width box on mobile, left column on desktop */}
-                  <div className="relative mx-auto h-40 w-40 shrink-0 bg-muted/50 sm:mx-0 sm:h-auto sm:w-56">
+                  <div className="relative mx-auto h-40 w-40 shrink-0 bg-gradient-to-br from-primary/10 via-muted to-muted/40 sm:mx-0 sm:h-auto sm:w-56">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}

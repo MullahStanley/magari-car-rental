@@ -8,6 +8,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -62,6 +63,7 @@ export function Header({ user }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           {user ? (
             <>
               <Button variant="ghost" size="sm" asChild>
@@ -120,6 +122,9 @@ export function Header({ user }: HeaderProps) {
               </Link>
             ))}
             <div className="border-t pt-3">
+              <div className="mb-2 flex justify-center">
+                <ThemeToggle />
+              </div>
               {user ? (
                 <Button
                   variant="outline"

@@ -10,6 +10,22 @@ export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 export type UserRole = "user" | "admin";
 export type VehicleCategory = "SUV" | "Sedan" | "Sports" | string;
 
+export interface AdminBookingRow {
+  id: string;
+  user_id: string;
+  vehicle_id: string;
+  start_date: string;
+  end_date: string;
+  total_price: number;
+  status: BookingStatus;
+  created_at: string;
+  vehicle_name: string;
+  vehicle_brand: string;
+  vehicle_category: string;
+  vehicle_image_url: string | null;
+  user_full_name: string | null;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -105,6 +121,19 @@ export interface Database {
           status?: BookingStatus;
           created_at?: string;
         };
+      };
+    };
+    Functions: {
+      admin_get_bookings: {
+        Args: Record<string, never>;
+        Returns: AdminBookingRow[];
+      };
+      admin_update_booking_status: {
+        Args: {
+          p_booking_id: string;
+          p_status: BookingStatus;
+        };
+        Returns: undefined;
       };
     };
   };

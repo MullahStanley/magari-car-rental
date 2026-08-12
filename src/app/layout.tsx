@@ -34,7 +34,20 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        {/* Apply saved theme before first paint to avoid a flash of the
+            wrong theme (dark mode toggle). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body>
         <div className="flex min-h-screen flex-col">
           <Header user={user} />

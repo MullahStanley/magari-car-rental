@@ -35,7 +35,9 @@ export default async function HomePage() {
   return (
     <>
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-background" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-background/70 to-background" />
+        <div className="pointer-events-none absolute -top-24 right-[-10%] h-[28rem] w-[28rem] rounded-full bg-primary/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-[-10%] h-96 w-96 rounded-full bg-sky-400/10 blur-3xl dark:bg-sky-500/15" />
         <div className="container relative mx-auto px-4 py-16 md:py-24">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <div className="space-y-6">
@@ -45,9 +47,7 @@ export default async function HomePage() {
               </div>
               <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
                 Drive the{" "}
-                <span className="bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-                  extraordinary
-                </span>
+                <span className="text-gradient">extraordinary</span>
               </h1>
               <p className="max-w-lg text-lg text-muted-foreground">
                 Browse our curated fleet of luxury and performance vehicles.
@@ -83,9 +83,9 @@ export default async function HomePage() {
             {features.map((feature) => (
               <div
                 key={feature.title}
-                className="rounded-2xl border bg-card p-6 transition-shadow hover:shadow-md"
+                className="group rounded-2xl border bg-card p-6 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 transition-transform group-hover:scale-110">
                   <feature.icon className="h-6 w-6 text-primary" />
                 </div>
                 <h3 className="mt-4 text-lg font-semibold">{feature.title}</h3>
@@ -115,7 +115,7 @@ export default async function HomePage() {
                   href={`/cars/${vehicle.id}`}
                   className="group rounded-2xl border bg-card p-6 transition-all hover:shadow-lg hover:-translate-y-1"
                 >
-                  <div className="relative mb-4 h-32 overflow-hidden rounded-xl bg-gradient-to-br from-muted to-muted/50">
+                  <div className="relative mb-4 h-32 overflow-hidden rounded-xl bg-gradient-to-br from-primary/10 via-muted to-muted/40">
                     {imageUrl ? (
                       <Image
                         src={imageUrl}
@@ -163,9 +163,13 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold">Ready to hit the road?</h2>
+      <section className="relative overflow-hidden py-20">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-primary/10 via-transparent to-transparent" />
+        <div className="container relative mx-auto px-4 text-center">
+          <h2 className="text-3xl font-bold">
+            Ready to hit the{" "}
+            <span className="text-gradient">road</span>?
+          </h2>
           <p className="mt-2 text-muted-foreground">
             Choose from SUVs, sedans, and sports cars from as low as Ksh.2000/day
           </p>
