@@ -29,9 +29,12 @@ security definer
 set search_path = public
 as $$
 begin
+    -- Qualify the column: inside a RETURNS TABLE function the output
+    -- parameter `id` is in scope, so an unqualified `id` would be ambiguous
+    -- between it and profiles.id (Postgres only errors at call time).
     if not exists (
         select 1 from public.profiles
-        where id = auth.uid() and role = 'admin'
+        where profiles.id = auth.uid() and profiles.role = 'admin'
     ) then
         raise exception 'Forbidden: admin role required';
     end if;
@@ -73,7 +76,7 @@ as $$
 begin
     if not exists (
         select 1 from public.profiles
-        where id = auth.uid() and role = 'admin'
+        where profiles.id = auth.uid() and profiles.role = 'admin'
     ) then
         raise exception 'Forbidden: admin role required';
     end if;
