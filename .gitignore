@@ -33,3 +33,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 3D model assets (large binary GLB files)
+# Excluded so Tailwind v4's content scanner doesn't try to parse them
+# (scanning these multi-hundred-MB binary files hangs the compiler).
+/models/
+/public/models/
+/supabase/models/
+/supabase/.temp

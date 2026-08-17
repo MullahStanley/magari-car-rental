@@ -51,15 +51,15 @@ export function BookingForm({
       : 0;
 
   const handleSubmit = () => {
-    if (!dateRange?.from || !dateRange?.to) {
-      setError("Please select rental dates.");
+    // Unauthenticated visitors can always head to sign-in, even before
+    // picking dates — the button shouldn't be dead for them.
+    if (!isAuthenticated) {
+      router.push(`/auth/login?redirect=/cars/${vehicleId}`);
       return;
     }
 
-    if (!isAuthenticated) {
-      router.push(
-        `/auth/login?redirect=/cars/${vehicleId}`
-      );
+    if (!dateRange?.from || !dateRange?.to) {
+      setError("Please select rental dates.");
       return;
     }
 
@@ -82,14 +82,18 @@ export function BookingForm({
   };
 
   return (
-    <Card>
+    <Card className="overflow-hidden">
+      <div className="h-1.5 bg-brand-gradient" aria-hidden="true" />
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <CalendarCheck className="h-5 w-5" />
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/25 to-primary/5">
+            <CalendarCheck className="h-5 w-5 text-primary" />
+          </div>
           Book {vehicleName}
         </CardTitle>
         <CardDescription>
-          Select your rental dates to see pricing
+          Select your rental dates to see pricing. No ID verification needed
+          — our team confirms bookings manually.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -99,7 +103,7 @@ export function BookingForm({
         />
 
         {days > 0 && (
-          <div className="space-y-2 rounded-lg bg-muted/50 p-4">
+          <div className="space-y-2 rounded-lg bg-gradient-to-br from-primary/10 to-muted/40 p-4">
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">
                 {formatCurrency(dailyRate)} × {days} day{days !== 1 ? "s" : ""}
@@ -124,17 +128,20 @@ export function BookingForm({
           className="w-full"
           size="lg"
           onClick={handleSubmit}
-          disabled={isPending || !dateRange?.from || !dateRange?.to}
+          disabled={
+            isPending ||
+            (isAuthenticated && (!dateRange?.from || !dateRange?.to))
+          }
         >
           {isPending ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Processing…
             </>
-          ) : isAuthenticated ? (
-            "Confirm Booking"
-          ) : (
+          ) : !isAuthenticated ? (
             "Sign in to Book"
+          ) : (
+            "Confirm Booking"
           )}
         </Button>
       </CardFooter>

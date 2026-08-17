@@ -22,9 +22,9 @@ The backend is handled by **Supabase** (PostgreSQL database, authentication, and
 
 | Layer | Technologies |
 |-------|-------------|
-| Frontend | Next.js 14 (App Router), React, TypeScript |
-| Styling | Tailwind CSS, Framer Motion, Shadcn UI |
-| 3D Graphics | React Three Fiber, `@react-three/drei`, Three.js |
+| Frontend | Next.js 15 (App Router), React, TypeScript |
+| Styling | Tailwind CSS, Motion, Shadcn UI |
+| 3D Graphics | React Three Fiber, `@react-three/drei`, Three.js, gltf-transform (meshopt) |
 | Backend | Supabase (Postgres, Auth, Storage, Row Level Security) |
 
 ---
@@ -34,7 +34,11 @@ The backend is handled by **Supabase** (PostgreSQL database, authentication, and
 ```
 magari-car-rental/
 ├── supabase/
-│   └── migrations/          # Database schema + RLS policies
+│   ├── migrations/          # Database schema + RLS policies
+│   └── models/              # Original (uncompressed) GLB backups
+├── public/
+│   └── models/              # Optimized (meshopt-compressed) GLBs
+├── scripts/                 # 3D model tooling (optimize / verify / upload / inspect)
 ├── src/
 │   ├── app/                 # Pages (App Router)
 │   ├── components/          # UI, 3D showroom, booking forms
@@ -62,12 +66,18 @@ npm install
 
 1. Create a new project at [supabase.com](https://supabase.com)
 2. Copy `.env.local.example` to `.env.local`
-3. Add your project URL and anon key from **Settings → API**:
+3. Add your project URL and **publishable (anon)** key from **Settings → API**.
+   The service role key is only needed if you want to deploy 3D models from the
+   CLI (see step 4):
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key-here
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here   # server-side only
 ```
+
+A template with the full list of variables (including Didit KYC) is in
+`.env.local.example`.
 
 ### 3. Run the database migration
 
@@ -81,9 +91,18 @@ This creates the `profiles`, `vehicles`, and `bookings` tables, enables Row Leve
 
 ### 4. Upload 3D models (optional)
 
-Upload `.glb` files to the `vehicle-assets` bucket in Supabase Storage. Paths should match the seed data, e.g. `models/tesla-model-s.glb`.
+The app loads models from the `vehicle-assets` bucket in Supabase Storage,
+keyed by the paths in the seed data (e.g. `models/tesla_model_x_2020.glb`).
+The repo ships meshopt-compressed models in `public/models/`; deploy them with:
 
-The homepage uses a public demo model so the 3D viewer works even before you upload your own files.
+```bash
+SUPABASE_SERVICE_ROLE_KEY=<key> NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co \
+  npm run upload:models
+```
+
+The homepage uses a bundled demo model, so the 3D viewer works even before you
+upload your own files. See [3D Showroom](#3d-showroom-vehicleshowroom) for the
+full optimize → verify → upload workflow.
 
 ### 5. Run the app
 
@@ -92,6 +111,29 @@ npm run dev
 ```
 
 Visit [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Authentication
+
+Sign-up and sign-in are handled by **Supabase Auth**. Credentials are stored in
+Supabase's `auth.users` table, and a database trigger (`handle_new_user`)
+automatically creates a matching row in `public.profiles` on sign-up.
+
+**Email confirmation is currently disabled** (`mailer_autoconfirm = true`), so
+signing up creates the account and logs you in immediately. To require email
+confirmation later:
+
+1. In the Supabase dashboard go to **Authentication → Providers → Email** and
+turn on **Confirm email**.
+2. Configure **Authentication → SMTP** settings with a real provider so
+confirmation emails are actually delivered.
+3. Add your site URL to **Authentication → URL Configuration → Redirect URLs**
+(e.g. `https://your-app.vercel.app/**`).
+
+The sign-up form already handles both modes: with auto-confirm it signs you in
+directly, and with confirmation enabled it shows a friendly "check your inbox"
+messsage.
 
 ---
 
@@ -119,6 +161,25 @@ update public.profiles set role = 'admin' where id = 'your-user-uuid';
 
 A client-side React Three Fiber component that loads `.glb` models from Supabase Storage. It includes lighting, orbit controls (zoom disabled so users don't clip inside the model), a loading spinner, and a color picker that updates the car body material.
 
+**Model optimization (meshopt):** the GLBs in `public/models/` are compressed
+with [gltf-transform](https://gltf-transform.dev) using
+`EXT_meshopt_compression` + `KHR_mesh_quantization` — no decimation, so the
+interior detailing is kept 1:1. This cuts the total download size from ~361 MB
+to ~68 MB. The showroom decodes them via `useGLTF(url, false, true)` (the WASM
+decoder ships with `three-stdlib`, no CDN needed) and caps the canvas at 2×
+device-pixel-ratio to keep mobile fill-rate down.
+
+**When you swap models, follow this workflow:**
+
+1. `npm run optimize:models` — meshopt-compress the GLBs in `public/models/`
+2. `node scripts/verify-glb.mjs <orig> <opt>` — confirm per-mesh triangle
+   counts are unchanged (no detail lost)
+3. `npm run upload:models -- --service-role-key <KEY> --url <URL>` — deploy to
+   the `vehicle-assets` bucket (originals stay in `supabase/models/`)
+4. Bump `MODEL_ASSET_VERSION` in `src/lib/utils.ts` — every model URL then
+   carries a new `?v=…` param, so browsers/CDNs fetch the fresh files instead
+   of serving stale cached copies
+
 ### Fleet Catalog (`/cars`)
 
 Server-rendered page that fetches vehicles from Supabase. Client-side filters update URL query parameters (`category`, `minPrice`, `maxPrice`, `startDate`, `endDate`) so the page state is shareable.
@@ -137,6 +198,8 @@ Users pick a date range using a calendar component. Past dates and invalid range
 | `npm run build` | Production build |
 | `npm run start` | Run production server |
 | `npm run lint` | Run ESLint |
+| `npm run optimize:models` | Meshopt-compress the GLBs in `public/models/` (~80% smaller, no detail loss) |
+| `npm run upload:models` | Upload optimized GLBs to the `vehicle-assets` bucket (needs service role key) |
 
 ---
 
