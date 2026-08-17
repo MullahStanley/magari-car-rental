@@ -25,6 +25,7 @@ const statusVariant: Record<
   "default" | "secondary" | "destructive" | "outline"
 > = {
   pending: "secondary",
+  awaiting_payment: "secondary",
   confirmed: "default",
   cancelled: "destructive",
   completed: "outline",

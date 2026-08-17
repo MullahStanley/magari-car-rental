@@ -15,6 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { createBooking } from "@/lib/bookings";
 import {
   calculateRentalDays,
@@ -27,18 +29,33 @@ interface BookingFormProps {
   dailyRate: number;
   vehicleName: string;
   isAuthenticated: boolean;
+  userEmail?: string;
 }
+
+const emptyRenter = {
+  name: "",
+  email: "",
+  phone: "",
+  nationalId: "",
+  driversLicense: "",
+};
 
 export function BookingForm({
   vehicleId,
   dailyRate,
   vehicleName,
   isAuthenticated,
+  userEmail,
 }: BookingFormProps) {
   const router = useRouter();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [renter, setRenter] = useState({ ...emptyRenter, email: userEmail ?? "" });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  const setRenterField = (field: keyof typeof emptyRenter, value: string) => {
+    setRenter((prev) => ({ ...prev, [field]: value }));
+  };
 
   const days =
     dateRange?.from && dateRange?.to
@@ -63,6 +80,17 @@ export function BookingForm({
       return;
     }
 
+    if (
+      !renter.name.trim() ||
+      !renter.email.trim() ||
+      !renter.phone.trim() ||
+      !renter.nationalId.trim() ||
+      !renter.driversLicense.trim()
+    ) {
+      setError("Please fill in all renter details.");
+      return;
+    }
+
     setError(null);
 
     startTransition(async () => {
@@ -71,6 +99,11 @@ export function BookingForm({
         startDate: format(dateRange.from!, "yyyy-MM-dd"),
         endDate: format(dateRange.to!, "yyyy-MM-dd"),
         dailyRate,
+        renterName: renter.name,
+        renterEmail: renter.email,
+        renterPhone: renter.phone,
+        nationalId: renter.nationalId,
+        driversLicense: renter.driversLicense,
       });
 
       if (result.success) {
@@ -92,8 +125,8 @@ export function BookingForm({
           Book {vehicleName}
         </CardTitle>
         <CardDescription>
-          Select your rental dates to see pricing. No ID verification needed
-          — our team confirms bookings manually.
+          Pick your rental dates and enter your details. Our team reviews
+          your booking, then you&apos;ll pay securely via M-Pesa to confirm.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -101,6 +134,68 @@ export function BookingForm({
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
         />
+
+        <div className="space-y-3 rounded-lg border bg-muted/20 p-4">
+          <p className="text-sm font-semibold">Renter details</p>
+          <div className="space-y-2">
+            <Label htmlFor="renter-name">Full Name</Label>
+            <Input
+              id="renter-name"
+              placeholder="John Doe"
+              value={renter.name}
+              onChange={(e) => setRenterField("name", e.target.value)}
+              autoComplete="name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="renter-email">Email</Label>
+            <Input
+              id="renter-email"
+              type="email"
+              placeholder="you@example.com"
+              value={renter.email}
+              onChange={(e) => setRenterField("email", e.target.value)}
+              autoComplete="email"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="renter-phone">Phone (M-Pesa number)</Label>
+            <Input
+              id="renter-phone"
+              type="tel"
+              placeholder="0712 345 678"
+              value={renter.phone}
+              onChange={(e) => setRenterField("phone", e.target.value)}
+              autoComplete="tel"
+            />
+            <p className="text-xs text-muted-foreground">
+              The M-Pesa payment prompt will be sent to this number after
+              your booking is approved.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="renter-national-id">National ID</Label>
+            <Input
+              id="renter-national-id"
+              placeholder="12345678"
+              value={renter.nationalId}
+              onChange={(e) => setRenterField("nationalId", e.target.value)}
+              autoComplete="off"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="renter-license">Driver&apos;s License</Label>
+            <Input
+              id="renter-license"
+              placeholder="e.g. A1234567"
+              value={renter.driversLicense}
+              onChange={(e) =>
+                setRenterField("driversLicense", e.target.value)
+              }
+              autoComplete="off"
+            />
+          </div>
+        </div>
 
         {days > 0 && (
           <div className="space-y-2 rounded-lg bg-gradient-to-br from-primary/10 to-muted/40 p-4">

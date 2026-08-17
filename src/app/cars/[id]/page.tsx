@@ -95,6 +95,7 @@ export default async function VehicleDetailPage({
           dailyRate={vehicle.daily_rate}
           vehicleName={vehicle.name}
           isAuthenticated={!!user}
+          userEmail={user?.email}
         />
       </div>
     </div>

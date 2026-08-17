@@ -15,6 +15,11 @@ export interface CreateBookingInput {
   startDate: string;
   endDate: string;
   dailyRate: number;
+  renterName: string;
+  renterEmail: string;
+  renterPhone: string;
+  nationalId: string;
+  driversLicense: string;
 }
 
 export interface BookingResult {
@@ -35,6 +40,17 @@ export async function createBooking(
 
   if (authError || !user) {
     return { success: false, error: "You must be logged in to book a vehicle." };
+  }
+
+  // Renter details are required — the admin uses them to review the booking.
+  if (
+    !input.renterName?.trim() ||
+    !input.renterEmail?.trim() ||
+    !input.renterPhone?.trim() ||
+    !input.nationalId?.trim() ||
+    !input.driversLicense?.trim()
+  ) {
+    return { success: false, error: "Please fill in all renter details." };
   }
 
 // Validate dates
@@ -92,6 +108,11 @@ const endDate = new Date(endYear, endMonth - 1, endDay);
       end_date: input.endDate,
       total_price: totalPrice,
       status: "pending",
+      renter_name: input.renterName.trim(),
+      renter_email: input.renterEmail.trim(),
+      renter_phone: input.renterPhone.trim(),
+      national_id: input.nationalId.trim(),
+      drivers_license: input.driversLicense.trim(),
     })
     .select("id")
     .single();

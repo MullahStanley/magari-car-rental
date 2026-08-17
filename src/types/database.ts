@@ -6,7 +6,13 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+export type BookingStatus =
+  | "pending"
+  | "awaiting_payment"
+  | "confirmed"
+  | "cancelled"
+  | "completed";
+export type PaymentStatus = "initiated" | "paid" | "failed";
 export type UserRole = "user" | "admin";
 export type VehicleCategory = "SUV" | "Sedan" | "Sports" | string;
 
@@ -24,6 +30,13 @@ export interface AdminBookingRow {
   vehicle_category: string;
   vehicle_image_url: string | null;
   user_full_name: string | null;
+  renter_name: string | null;
+  renter_email: string | null;
+  renter_phone: string | null;
+  national_id: string | null;
+  drivers_license: string | null;
+  payment_status: PaymentStatus | null;
+  payment_receipt: string | null;
 }
 
 export interface Database {
@@ -99,6 +112,11 @@ export interface Database {
           end_date: string;
           total_price: number;
           status: BookingStatus;
+          renter_name: string | null;
+          renter_email: string | null;
+          renter_phone: string | null;
+          national_id: string | null;
+          drivers_license: string | null;
           created_at: string;
         };
         Insert: {
@@ -109,6 +127,11 @@ export interface Database {
           end_date: string;
           total_price: number;
           status?: BookingStatus;
+          renter_name?: string | null;
+          renter_email?: string | null;
+          renter_phone?: string | null;
+          national_id?: string | null;
+          drivers_license?: string | null;
           created_at?: string;
         };
         Update: {
@@ -119,7 +142,53 @@ export interface Database {
           end_date?: string;
           total_price?: number;
           status?: BookingStatus;
+          renter_name?: string | null;
+          renter_email?: string | null;
+          renter_phone?: string | null;
+          national_id?: string | null;
+          drivers_license?: string | null;
           created_at?: string;
+        };
+      };
+      payments: {
+        Row: {
+          id: string;
+          booking_id: string;
+          amount: number;
+          phone: string;
+          status: PaymentStatus;
+          checkout_request_id: string | null;
+          merchant_request_id: string | null;
+          mpesa_receipt: string | null;
+          result_desc: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          amount: number;
+          phone: string;
+          status?: PaymentStatus;
+          checkout_request_id?: string | null;
+          merchant_request_id?: string | null;
+          mpesa_receipt?: string | null;
+          result_desc?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          amount?: number;
+          phone?: string;
+          status?: PaymentStatus;
+          checkout_request_id?: string | null;
+          merchant_request_id?: string | null;
+          mpesa_receipt?: string | null;
+          result_desc?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
     };

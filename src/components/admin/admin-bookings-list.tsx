@@ -4,7 +4,15 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
-import { CalendarDays, Car, Check, CheckCheck, Loader2, X } from "lucide-react";
+import {
+  CalendarDays,
+  Car,
+  Check,
+  CheckCheck,
+  Loader2,
+  Smartphone,
+  X,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { updateBookingStatus } from "@/lib/bookings";
@@ -16,6 +24,7 @@ const statusVariant: Record<
   "default" | "secondary" | "destructive" | "outline"
 > = {
   pending: "secondary",
+  awaiting_payment: "secondary",
   confirmed: "default",
   cancelled: "destructive",
   completed: "outline",
@@ -54,13 +63,34 @@ function AdminBookingRow({ booking }: { booking: AdminBookingRow }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [promptSent, setPromptSent] = useState<string | null>(null);
 
   const update = (status: BookingStatus) => {
     setError(null);
+    setPromptSent(null);
     startTransition(async () => {
       const result = await updateBookingStatus(booking.id, status);
       if (!result.success) {
         setError(result.error ?? "Failed to update booking.");
+      }
+      router.refresh();
+    });
+  };
+
+  // Approve a pending booking. The M-Pesa prompt is simulated — the
+  // booking is confirmed right away and the admin is told a prompt was
+  // sent to the renter.
+  const approve = () => {
+    setError(null);
+    setPromptSent(null);
+    startTransition(async () => {
+      const result = await updateBookingStatus(booking.id, "confirmed");
+      if (!result.success) {
+        setError(result.error ?? "Failed to update booking.");
+      } else {
+        setPromptSent(
+          `Prompt sent to ${booking.renter_name ?? booking.user_full_name ?? "the renter"}`
+        );
       }
       router.refresh();
     });
@@ -127,26 +157,38 @@ function AdminBookingRow({ booking }: { booking: AdminBookingRow }) {
             addSuffix: true,
           })}
         </p>
+        {(booking.renter_name || booking.renter_phone) && (
+          <p className="mt-0.5 text-xs text-muted-foreground/80">
+            Renter: {booking.renter_name ?? "—"} · {booking.renter_phone ?? "—"}
+            {booking.national_id ? ` · ID ${booking.national_id}` : ""}
+            {booking.drivers_license
+              ? ` · DL ${booking.drivers_license}`
+              : ""}
+          </p>
+        )}
       </div>
 
       {/* Admin actions */}
       {showActions && (
         <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
+        {promptSent && (
+          <p className="text-xs font-medium text-green-600">{promptSent}</p>
+        )}
         {error && <p className="text-xs text-destructive">{error}</p>}
         <div className="flex items-center gap-2">
           {booking.status === "pending" ? (
             <>
               <Button
                 size="sm"
-                onClick={() => update("confirmed")}
+                onClick={approve}
                 disabled={isPending}
               >
                 {isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Check className="h-4 w-4" />
+                  <Smartphone className="h-4 w-4" />
                 )}
-                Confirm
+                Approve &amp; Request Payment
               </Button>
               <Button
                 size="sm"

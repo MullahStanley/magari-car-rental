@@ -1,4 +1,5 @@
 import { format, parseISO } from "date-fns";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { EMAIL_FROM, SUPPORT_EMAIL, resend } from "@/lib/resend";
@@ -150,6 +151,12 @@ interface BookingStatusEmailInput {
   bookingId: string;
   newStatus: BookingStatus;
   previousStatus?: BookingStatus;
+  /**
+   * Pass a service-role client when there is no user session (e.g. from a
+   * webhook) so the booking row can still be read past RLS. Defaults to the
+   * request-scoped client for normal server actions.
+   */
+  client?: SupabaseClient;
 }
 
 /**
@@ -161,6 +168,7 @@ export async function sendBookingStatusEmail({
   bookingId,
   newStatus,
   previousStatus,
+  client,
 }: BookingStatusEmailInput): Promise<void> {
   try {
     if (!resend) {
@@ -173,7 +181,7 @@ export async function sendBookingStatusEmail({
     const kind = resolveKind(newStatus, previousStatus);
     if (!kind) return;
 
-    const supabase = await createClient();
+    const supabase = client ?? (await createClient());
     const { data: booking, error } = await supabase
       .from("bookings")
       .select(
