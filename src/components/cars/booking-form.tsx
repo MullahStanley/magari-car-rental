@@ -51,13 +51,15 @@ export function BookingForm({
       : 0;
 
   const handleSubmit = () => {
-    if (!dateRange?.from || !dateRange?.to) {
-      setError("Please select rental dates.");
+    // Unauthenticated visitors can always head to sign-in, even before
+    // picking dates — the button shouldn't be dead for them.
+    if (!isAuthenticated) {
+      router.push(`/auth/login?redirect=/cars/${vehicleId}`);
       return;
     }
 
-    if (!isAuthenticated) {
-      router.push(`/auth/login?redirect=/cars/${vehicleId}`);
+    if (!dateRange?.from || !dateRange?.to) {
+      setError("Please select rental dates.");
       return;
     }
 
@@ -126,7 +128,10 @@ export function BookingForm({
           className="w-full"
           size="lg"
           onClick={handleSubmit}
-          disabled={isPending || !dateRange?.from || !dateRange?.to}
+          disabled={
+            isPending ||
+            (isAuthenticated && (!dateRange?.from || !dateRange?.to))
+          }
         >
           {isPending ? (
             <>

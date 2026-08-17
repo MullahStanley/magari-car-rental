@@ -1,8 +1,10 @@
 import { format, parseISO } from "date-fns";
 import Image from "next/image";
-import { CalendarDays, Car } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, CalendarDays, Car } from "lucide-react";
 import { CancelBookingButton } from "@/components/booking/cancel-booking-button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -47,6 +49,12 @@ export default async function BookingsPage() {
           <p className="mt-1 text-sm text-muted-foreground">
             Browse our fleet and book your first ride
           </p>
+          <Button asChild className="mt-6">
+            <Link href="/cars">
+              Browse Fleet
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       ) : (
         <div className="mt-8 space-y-4">

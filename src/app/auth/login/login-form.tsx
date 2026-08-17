@@ -183,7 +183,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               className="w-full"
               onClick={() => switchMode("signin")}
             >
@@ -191,7 +191,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
             </Button>
             <Link
               href="/cars"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-center text-sm text-muted-foreground hover:text-foreground"
             >
               Continue browsing without signing in
             </Link>
@@ -268,9 +268,21 @@ export function LoginForm({ redirect }: LoginFormProps) {
                 "Sign In"
               )}
             </Button>
+
+            <div className="relative w-full">
+              <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase tracking-wide">
+                <span className="bg-card px-2 text-muted-foreground">
+                  {mode === "signup" ? "Already registered?" : "New to Magari?"}
+                </span>
+              </div>
+            </div>
+
             <Button
               type="button"
-              variant="ghost"
+              variant="outline"
               className="w-full"
               onClick={() =>
                 switchMode(mode === "signup" ? "signin" : "signup")
@@ -282,7 +294,7 @@ export function LoginForm({ redirect }: LoginFormProps) {
             </Button>
             <Link
               href="/cars"
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-center text-sm text-muted-foreground hover:text-foreground"
             >
               Continue browsing without signing in
             </Link>
