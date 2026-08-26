@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
-import { ArrowRight, Car } from "lucide-react";
+import { ArrowRight, Car, Cog, Calendar } from "lucide-react";
 import type { Vehicle } from "@/types/database";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,25 @@ export function VehicleCard({ vehicle, index = 0 }: VehicleCardProps) {
           <p className="line-clamp-2 text-sm text-muted-foreground">
             {vehicle.description}
           </p>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {vehicle.year && (
+              <Badge variant="outline" className="gap-1 text-xs font-normal">
+                <Calendar className="h-3 w-3" />
+                {vehicle.year}
+              </Badge>
+            )}
+            {vehicle.drivetrain && (
+              <Badge variant="outline" className="gap-1 text-xs font-normal">
+                <Cog className="h-3 w-3" />
+                {vehicle.drivetrain}
+              </Badge>
+            )}
+            {vehicle.transmission && (
+              <Badge variant="outline" className="text-xs font-normal">
+                {vehicle.transmission}
+              </Badge>
+            )}
+          </div>
           <p className="mt-3 text-2xl font-bold">
             {formatCurrency(vehicle.daily_rate)}
             <span className="text-sm font-normal text-muted-foreground">
