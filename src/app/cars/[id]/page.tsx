@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { Car, Loader2 } from "lucide-react";
 import { VehicleShowroomClient } from "@/components/showroom/vehicle-showroom-client";
 import { BookingForm } from "@/components/cars/booking-form";
+import { VehicleSpecs } from "@/components/cars/vehicle-specs";
 import { Badge } from "@/components/ui/badge";
 import { getVehicleById } from "@/lib/vehicles";
 import { createClient } from "@/lib/supabase/server";
@@ -59,6 +60,12 @@ export default async function VehicleDetailPage({
           /day
         </span>
       </p>
+
+      <div className="mt-6">
+        <VehicleSpecs
+          vehicle={vehicle}
+        />
+      </div>
 
       {imageUrl ? (
         <div className="relative mt-8 h-[300px] overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-muted to-muted/40 sm:h-[400px]">

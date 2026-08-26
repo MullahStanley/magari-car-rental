@@ -76,6 +76,15 @@ export interface Database {
           image_url: string | null;
           description: string | null;
           is_available: boolean;
+          engine_type: string | null;
+          engine_capacity: string | null;
+          horsepower: number | null;
+          drivetrain: string | null;
+          transmission: string | null;
+          fuel_type: string | null;
+          seats: number | null;
+          year: number | null;
+          color: string | null;
           created_at: string;
         };
         Insert: {
@@ -88,6 +97,15 @@ export interface Database {
           image_url?: string | null;
           description?: string | null;
           is_available?: boolean;
+          engine_type?: string | null;
+          engine_capacity?: string | null;
+          horsepower?: number | null;
+          drivetrain?: string | null;
+          transmission?: string | null;
+          fuel_type?: string | null;
+          seats?: number | null;
+          year?: number | null;
+          color?: string | null;
           created_at?: string;
         };
         Update: {
@@ -100,6 +118,15 @@ export interface Database {
           image_url?: string | null;
           description?: string | null;
           is_available?: boolean;
+          engine_type?: string | null;
+          engine_capacity?: string | null;
+          horsepower?: number | null;
+          drivetrain?: string | null;
+          transmission?: string | null;
+          fuel_type?: string | null;
+          seats?: number | null;
+          year?: number | null;
+          color?: string | null;
           created_at?: string;
         };
       };
