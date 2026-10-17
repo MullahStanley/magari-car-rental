@@ -4,7 +4,7 @@ import { useCallback, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DateRange } from "react-day-picker";
 import { format, parseISO } from "date-fns";
-import { Search, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { DateRangePicker } from "@/components/booking/date-range-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,22 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { formatCurrency } from "@/lib/utils";
 
 interface VehicleFiltersProps {
   categories: string[];
-  maxPrice: number;
 }
 
-export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
+export function VehicleFilters({ categories }: VehicleFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
 
   const currentCategory = searchParams.get("category") ?? "all";
-  const currentMinPrice = Number(searchParams.get("minPrice") ?? 0);
-  const currentMaxPrice = Number(searchParams.get("maxPrice") ?? maxPrice);
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
 
@@ -72,16 +67,19 @@ export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
   };
 
   const hasActiveFilters =
-    currentCategory !== "all" ||
-    currentMinPrice > 0 ||
-    currentMaxPrice < maxPrice ||
-    startDate ||
-    endDate;
+    currentCategory !== "all" || startDate || endDate;
 
   return (
-    <div className="space-y-6 rounded-2xl border bg-card p-6">
+    <div className="overflow-hidden rounded-2xl border bg-card">
+      <div className="h-1.5 bg-brand-gradient" aria-hidden="true" />
+      <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Filter Fleet</h2>
+        <h2 className="flex items-center gap-2 text-lg font-semibold">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-primary/25 to-primary/5">
+            <SlidersHorizontal className="h-4 w-4 text-primary" />
+          </span>
+          Filter Fleet
+        </h2>
         {hasActiveFilters && (
           <Button
             variant="ghost"
@@ -115,28 +113,6 @@ export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
         </Select>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label>Price Range</Label>
-          <span className="text-sm text-muted-foreground">
-            {formatCurrency(currentMinPrice)} – {formatCurrency(currentMaxPrice)}
-            /day
-          </span>
-        </div>
-        <Slider
-          min={0}
-          max={maxPrice}
-          step={10}
-          value={[currentMinPrice, currentMaxPrice]}
-          onValueCommit={([min, max]) =>
-            updateParams({
-              minPrice: min > 0 ? String(min) : null,
-              maxPrice: max < maxPrice ? String(max) : null,
-            })
-          }
-        />
-      </div>
-
       <div className="space-y-2">
         <Label>Availability Dates</Label>
         <DateRangePicker
@@ -154,6 +130,7 @@ export function VehicleFilters({ categories, maxPrice }: VehicleFiltersProps) {
           Updating results…
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { Car, LogIn, LogOut, Menu, User, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -34,7 +35,7 @@ export function Header({ user }: HeaderProps) {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-bold text-xl">
           <Car className="h-6 w-6 text-primary" />
-          <span>Magari</span>
+          <span>Magari Car-Rental</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
@@ -62,6 +63,7 @@ export function Header({ user }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           {user ? (
             <>
               <Button variant="ghost" size="sm" asChild>
@@ -120,6 +122,9 @@ export function Header({ user }: HeaderProps) {
               </Link>
             ))}
             <div className="border-t pt-3">
+              <div className="mb-2 flex justify-center">
+                <ThemeToggle />
+              </div>
               {user ? (
                 <Button
                   variant="outline"

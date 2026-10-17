@@ -6,9 +6,38 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+export type BookingStatus =
+  | "pending"
+  | "awaiting_payment"
+  | "confirmed"
+  | "cancelled"
+  | "completed";
+export type PaymentStatus = "initiated" | "paid" | "failed";
 export type UserRole = "user" | "admin";
 export type VehicleCategory = "SUV" | "Sedan" | "Sports" | string;
+
+export interface AdminBookingRow {
+  id: string;
+  user_id: string;
+  vehicle_id: string;
+  start_date: string;
+  end_date: string;
+  total_price: number;
+  status: BookingStatus;
+  created_at: string;
+  vehicle_name: string;
+  vehicle_brand: string;
+  vehicle_category: string;
+  vehicle_image_url: string | null;
+  user_full_name: string | null;
+  renter_name: string | null;
+  renter_email: string | null;
+  renter_phone: string | null;
+  national_id: string | null;
+  drivers_license: string | null;
+  payment_status: PaymentStatus | null;
+  payment_receipt: string | null;
+}
 
 export interface Database {
   public: {
@@ -47,6 +76,15 @@ export interface Database {
           image_url: string | null;
           description: string | null;
           is_available: boolean;
+          engine_type: string | null;
+          engine_capacity: string | null;
+          horsepower: number | null;
+          drivetrain: string | null;
+          transmission: string | null;
+          fuel_type: string | null;
+          seats: number | null;
+          year: number | null;
+          color: string | null;
           created_at: string;
         };
         Insert: {
@@ -59,6 +97,15 @@ export interface Database {
           image_url?: string | null;
           description?: string | null;
           is_available?: boolean;
+          engine_type?: string | null;
+          engine_capacity?: string | null;
+          horsepower?: number | null;
+          drivetrain?: string | null;
+          transmission?: string | null;
+          fuel_type?: string | null;
+          seats?: number | null;
+          year?: number | null;
+          color?: string | null;
           created_at?: string;
         };
         Update: {
@@ -71,6 +118,15 @@ export interface Database {
           image_url?: string | null;
           description?: string | null;
           is_available?: boolean;
+          engine_type?: string | null;
+          engine_capacity?: string | null;
+          horsepower?: number | null;
+          drivetrain?: string | null;
+          transmission?: string | null;
+          fuel_type?: string | null;
+          seats?: number | null;
+          year?: number | null;
+          color?: string | null;
           created_at?: string;
         };
       };
@@ -83,6 +139,11 @@ export interface Database {
           end_date: string;
           total_price: number;
           status: BookingStatus;
+          renter_name: string | null;
+          renter_email: string | null;
+          renter_phone: string | null;
+          national_id: string | null;
+          drivers_license: string | null;
           created_at: string;
         };
         Insert: {
@@ -93,6 +154,11 @@ export interface Database {
           end_date: string;
           total_price: number;
           status?: BookingStatus;
+          renter_name?: string | null;
+          renter_email?: string | null;
+          renter_phone?: string | null;
+          national_id?: string | null;
+          drivers_license?: string | null;
           created_at?: string;
         };
         Update: {
@@ -103,8 +169,67 @@ export interface Database {
           end_date?: string;
           total_price?: number;
           status?: BookingStatus;
+          renter_name?: string | null;
+          renter_email?: string | null;
+          renter_phone?: string | null;
+          national_id?: string | null;
+          drivers_license?: string | null;
           created_at?: string;
         };
+      };
+      payments: {
+        Row: {
+          id: string;
+          booking_id: string;
+          amount: number;
+          phone: string;
+          status: PaymentStatus;
+          checkout_request_id: string | null;
+          merchant_request_id: string | null;
+          mpesa_receipt: string | null;
+          result_desc: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          booking_id: string;
+          amount: number;
+          phone: string;
+          status?: PaymentStatus;
+          checkout_request_id?: string | null;
+          merchant_request_id?: string | null;
+          mpesa_receipt?: string | null;
+          result_desc?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          booking_id?: string;
+          amount?: number;
+          phone?: string;
+          status?: PaymentStatus;
+          checkout_request_id?: string | null;
+          merchant_request_id?: string | null;
+          mpesa_receipt?: string | null;
+          result_desc?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+    };
+    Functions: {
+      admin_get_bookings: {
+        Args: Record<string, never>;
+        Returns: AdminBookingRow[];
+      };
+      admin_update_booking_status: {
+        Args: {
+          p_booking_id: string;
+          p_status: BookingStatus;
+        };
+        Returns: undefined;
       };
     };
   };
@@ -115,5 +240,8 @@ export type Vehicle = Database["public"]["Tables"]["vehicles"]["Row"];
 export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 
 export interface BookingWithVehicle extends Booking {
-  vehicles: Pick<Vehicle, "name" | "brand" | "category" | "daily_rate">;
+  vehicles: Pick<
+    Vehicle,
+    "name" | "brand" | "category" | "daily_rate" | "image_url"
+  >;
 }

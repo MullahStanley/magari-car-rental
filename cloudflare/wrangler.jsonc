@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "magari-assets-cdn",
+  "main": "src/index.ts",
+  "compatibility_date": "2024-09-23",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "SUPABASE_URL": "https://mjrdngowtmhzybzrrfjy.supabase.co",
+    "DEFAULT_BUCKET": "vehicle-assets"
+  }
+}
