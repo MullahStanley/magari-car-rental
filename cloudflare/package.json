@@ -1,0 +1,12 @@
+{
+  "name": "magari-assets-cdn",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare CDN Worker for Magari Car Rental Supabase Storage assets and 3D models",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  }
+}

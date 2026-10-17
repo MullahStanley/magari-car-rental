@@ -82,4 +82,6 @@ for (const name of files) {
 
 if (!process.exitCode) {
   console.log("\nDone. The 3D showroom now serves the meshopt-compressed models.");
+  console.log("💡 CDN Tip: If using Cloudflare CDN, bump MODEL_ASSET_VERSION in src/lib/utils.ts");
+  console.log("   (or run 'npm run cdn:purge') to invalidate edge and browser caches.");
 }

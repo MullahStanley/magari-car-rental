@@ -104,8 +104,8 @@ export async function POST(
 
   // If there was a previous image in Supabase storage, try to delete it
   const oldImageUrl = formData.get("oldImageUrl") as string | null;
-  if (oldImageUrl && oldImageUrl.includes("/storage/v1/object/public/vehicle-assets/")) {
-    const oldPath = oldImageUrl.split("/vehicle-assets/")[1];
+  if (oldImageUrl && oldImageUrl.includes("/vehicle-assets/")) {
+    const oldPath = oldImageUrl.split("/vehicle-assets/")[1]?.split("?")[0];
     if (oldPath) {
       await supabase.storage.from("vehicle-assets").remove([oldPath]);
     }
@@ -147,8 +147,8 @@ export async function DELETE(
     .eq("id", id)
     .single();
 
-  if (vehicle?.image_url?.includes("/storage/v1/object/public/vehicle-assets/")) {
-    const filePath = vehicle.image_url.split("/vehicle-assets/")[1];
+  if (vehicle?.image_url && vehicle.image_url.includes("/vehicle-assets/")) {
+    const filePath = vehicle.image_url.split("/vehicle-assets/")[1]?.split("?")[0];
     if (filePath) {
       await supabase.storage.from("vehicle-assets").remove([filePath]);
     }

@@ -200,6 +200,11 @@ Users pick a date range using a calendar component. Past dates and invalid range
 | `npm run lint` | Run ESLint |
 | `npm run optimize:models` | Meshopt-compress the GLBs in `public/models/` (~80% smaller, no detail loss) |
 | `npm run upload:models` | Upload optimized GLBs to the `vehicle-assets` bucket (needs service role key) |
+| `npm run cdn:dev` | Start local Cloudflare CDN worker development server |
+| `npm run cdn:deploy` | Deploy Cloudflare CDN worker to production edge network |
+| `npm run cdn:purge` | Purge Cloudflare CDN edge cache (or use query versioning) |
+
+See [Cloudflare CDN Setup Guide](docs/CLOUDFLARE_CDN_SETUP.md) for full configuration details.
 
 ---
 

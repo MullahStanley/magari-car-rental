@@ -24,15 +24,54 @@ function appendModelVersion(url: string): string {
   return `${url}${sep}v=${MODEL_ASSET_VERSION}`;
 }
 
+/**
+ * Checks if the Cloudflare CDN is configured via NEXT_PUBLIC_CDN_URL.
+ */
+export function isCDNEnabled(): boolean {
+  return Boolean(process.env.NEXT_PUBLIC_CDN_URL?.trim());
+}
+
+/**
+ * Rewrites a Supabase storage URL to route through the Cloudflare CDN edge cache
+ * when NEXT_PUBLIC_CDN_URL is configured. External URLs (Unsplash, etc.) are kept intact.
+ */
+export function toCDNUrl(url: string): string {
+  const cdnBase = process.env.NEXT_PUBLIC_CDN_URL?.trim().replace(/\/+$/, "");
+  if (!cdnBase) return url;
+
+  const supabaseBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "")
+    .trim()
+    .replace(/\/+$/, "");
+
+  // Replace configured Supabase project base URL with CDN base URL
+  if (supabaseBase && url.startsWith(supabaseBase)) {
+    return `${cdnBase}${url.slice(supabaseBase.length)}`;
+  }
+
+  // Also match any Supabase Storage public URL pattern: https://<project-ref>.supabase.co/storage/v1/object/public/...
+  const supabasePattern = /^https:\/\/[^/]+\.supabase\.co(\/storage\/v1\/object\/public\/.*)$/i;
+  const match = url.match(supabasePattern);
+  if (match) {
+    return `${cdnBase}${match[1]}`;
+  }
+
+  return url;
+}
+
 export function getModelUrl(path: string): string {
   // Serve 3D models from the public `vehicle-assets` bucket in Supabase
-  // Storage (the app never ships the large GLB binaries in git). DB values
+  // Storage or via Cloudflare CDN edge cache (NEXT_PUBLIC_CDN_URL). DB values
   // look like "models/foo.glb"; be tolerant of leading slashes and
   // already-absolute URLs.
   const trimmed = (path || "").trim();
-  if (/^https?:\/\//i.test(trimmed)) return appendModelVersion(trimmed);
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) {
+    return appendModelVersion(toCDNUrl(trimmed));
+  }
   const file = trimmed.replace(/^\/?models\//, "");
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const cdnBase = process.env.NEXT_PUBLIC_CDN_URL?.trim().replace(/\/+$/, "");
+  const supabaseBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim().replace(/\/+$/, "");
+  const base = cdnBase || supabaseBase;
   return appendModelVersion(
     `${base}/storage/v1/object/public/vehicle-assets/models/${file}`
   );
@@ -42,9 +81,9 @@ export function getImageUrl(url: string | null | undefined): string | null {
   if (!url) return null;
   const trimmed = url.trim();
   if (!trimmed) return null;
-  // Absolute URLs (Supabase Storage public URLs, Unsplash, etc.) are already
-  // fully qualified — pass them through, just URL-encoding spaces/unicode.
-  if (/^https?:\/\//i.test(trimmed)) return encodeURI(trimmed);
+  // Absolute URLs (Supabase Storage public URLs, Unsplash, etc.)
+  // When pointing to Supabase storage, route through Cloudflare CDN if configured.
+  if (/^https?:\/\//i.test(trimmed)) return encodeURI(toCDNUrl(trimmed));
   // Root-relative paths (e.g. "/images/foo.jpg") resolve from the site root.
   if (trimmed.startsWith("/")) return encodeURI(trimmed);
   // DB seed values look like "images/foo.jpg" — serve them from the app's
